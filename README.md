@@ -17,3 +17,14 @@ device, or they can create a seperate group on each SSD.
 
 
 
+Usage
+=====================
+
+to create a new group:
+fcg-create [-g|--group <group name>] [-hs|--hddsize <hdd size>] [-cd|--cachedev <cache device>] [-cs|--cachesize <cache size>]
+
+
+to add a hard disk to an existing group:
+fcg-add [-g|--group  <group name>] [-h|--hdddev <hdd device>]
+
+
