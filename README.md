@@ -21,10 +21,16 @@ Usage
 =====================
 
 to create a new group:
-fcg-create [-g|--group <group name>] [-hs|--hddsize <hdd size>] [-cd|--cachedev <cache device>] [-cs|--cachesize <cache size>]
+
+    fcg-create {-g|--group} <group name> {-cd|--cachedev} <cache device>
 
 
 to add a hard disk to an existing group:
-fcg-add [-g|--group  <group name>] [-h|--hdddev <hdd device>]
 
+    fcg-add {-g|--group}  <group name> {-h|--hdddev} <hdd device>
+
+
+to show groups and their sub-devices:
+
+    fcg-show [{-g|--group}  <group name>]
 
