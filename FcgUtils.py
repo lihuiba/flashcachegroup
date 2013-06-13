@@ -35,6 +35,17 @@ def write2tempfile(content):
     temp.close()
     return temp.name
 
+def get_devname_from_major_minor(majorMinor):
+    cmd = "ls -l /dev/block|awk '{print $9, $11}'|grep %s" % majorMinor
+    _, deviceName = os_execue(cmd).split()
+    deviceName = deviceName.split('/')[-1:][0]
+    if majorMinor.split(':')[0] == '253':
+        cmd = "ls -l /dev/mapper|awk '{if ($11 != \"\") print $11, $9}'|grep %s"% deviceName
+        _, deviceName = os_execue(cmd).split()
+        return '/dev/mapper/%s' % deviceName   
+    else:
+        return '/dev/%s' % deviceName
+
 def get_dev_sector_count(dev):
     cmd = 'blockdev --getsz %s'%dev
     devSector = os_execue(cmd)
@@ -55,3 +66,14 @@ def reload_table(tableName, tableContent):
     os_execue(cmd)
     cmd = 'dmsetup resume %s'%tableName
     os_execue(cmd)
+
+def delete_table(tableName):
+    cmd = 'dmsetup remove %s'%tableName
+    os_execue(cmd)
+
+def test_get_devname_from_major_minor():
+    for mm in ['7:2', '253:5']:
+        print get_devname_from_major_minor(mm)
+
+if __name__ == '__main__':
+    test_get_devname_from_major_minor()
