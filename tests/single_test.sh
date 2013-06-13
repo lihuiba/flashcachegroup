@@ -48,3 +48,5 @@ cmp $bak_hdd2 $cache_hdd2
 cmp $bak_hdd1 $cache_hdd1
 
 python fcg-delete.py -g testgroup
+echo "Test end at time: "
+echo `date`
