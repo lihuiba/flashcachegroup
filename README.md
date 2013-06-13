@@ -29,7 +29,6 @@ to add a hard disk to an existing group:
 
     fcg-add {-g|--group}  <group name> {-h|--hdddev} <hdd device>
 
-
 to show groups and their sub-devices:
 
     fcg-show [{-g|--group}  <group name>]
@@ -37,3 +36,7 @@ to show groups and their sub-devices:
 to delete a group:
 
     fcg-delete {-g|--group}  <group name>
+
+to remove an existing hard disk to an group:
+
+    fcg-remove {-g|--group}  <group name> {-h|--hdddev} <hdd device>
