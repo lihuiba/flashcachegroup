@@ -34,3 +34,6 @@ to show groups and their sub-devices:
 
     fcg-show [{-g|--group}  <group name>]
 
+to delete a group:
+
+    fcg-delete {-g|--group}  <group name>
