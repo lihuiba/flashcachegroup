@@ -1,21 +1,36 @@
 #!/usr/bin/env python
 import commands, tempfile
-def bytes2sectors(bytes):
-    if bytes.endswith('T') or bytes.endswith('t'):
-        bytes = int(bytes[:-1])*1024*1024*1024*1024
-    elif bytes.endswith('G') or bytes.endswith('g'):
-        bytes = int(bytes[:-1])*1024*1024*1024
-    elif bytes.endswith('M') or bytes.endswith('m'):
-        bytes = int(bytes[:-1])*1024*1024
-    elif bytes.endswith('K') or bytes.endswith('k'):
-        bytes = int(bytes[:-1])*1024
-    else:
-        bytes = int(bytes)*1024*1024
-    sectors = bytes/512
-    return sectors
 
 def sectors2Mb(sectors):
     return str(sectors*512/1024/1024) + 'M'
+
+def bytes_str2bytes_count(bytes):
+    #take M as default
+    bytes_num = 0
+    if bytes.endswith('P') or bytes.endswith('p'):
+        bytes_num = int(bytes[:-1])*1024*1024*1024*1024*1024
+    elif bytes.endswith('T') or bytes.endswith('t'):
+        bytes_num = int(bytes[:-1])*1024*1024*1024*1024
+    elif bytes.endswith('G') or bytes.endswith('g'):
+        bytes_num = int(bytes[:-1])*1024*1024*1024
+    elif bytes.endswith('M') or bytes.endswith('m'):
+        bytes_num = int(bytes[:-1])*1024*1024
+    elif bytes.endswith('K') or bytes.endswith('k'):
+        bytes_num = int(bytes[:-1])*1024
+    else:
+        bytes_num = int(bytes)*1024*1024
+    return bytes_num
+
+def bytes2sectors(bytes):
+    bytes = bytes_str2bytes_count(bytes)
+    sectors = bytes/512
+    return sectors
+
+def sector_offset2block_offset(startSector, offset, blkSize):
+    blkSize = bytes_str2bytes_count(blkSize)
+    startBlk = startSector * 512 / blkSize
+    offsetBlk = offset * 512 / blkSize
+    return startBlk, offsetBlk
 
 def os_execue(cmd):
     try:
@@ -76,11 +91,23 @@ def get_cache_ssd_dev(cacheTableName):
     ssd_dev = os_execue(cmd)[1:-2]
     return ssd_dev
 
+def get_cache_blksize(cacheTableName):
+    cmd = "dmsetup table %s |grep block|grep size|awk '{print $5}'" % cacheTableName
+    tmpSizeStr = os_execue(cmd)
+    blkSize = tmpSizeStr[tmpSizeStr.find('(')+1: tmpSizeStr.find(')')]
+    return blkSize
+
+def invalid_cache_blocks(cacheTableName, startBlk, offsetBlk):
+    cmd = 'flashcache_invalidate /dev/mapper/%s %s %s' % (cacheTableName, startBlk, offsetBlk)
+    os_execue(cmd)
+
 def test_get_devname_from_major_minor():
     for mm in ['7:2', '253:5']:
         print get_devname_from_major_minor(mm)
 def test_get_cache_ssd_dev():
     print get_cache_ssd_dev('cache_testgroup')
+def test_get_cache_blksize():
+    print get_cache_blksize('cache_testgroup')
 
 if __name__ == '__main__':
-    test_get_cache_ssd_dev()
+    test_get_cache_blksize()

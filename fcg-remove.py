@@ -26,7 +26,11 @@ def delete_hdd(groupName, hddDev):
     startSec, offset, type, oriDev, oriStartSec = cacheHddTable.split()
     startSec, offset, oriStartSec = map(int, [startSec, offset, oriStartSec])
     #delete cache_hdd table 
-    FcgUtils.delete_table(cacheHddName)
+    FcgUtils.delete_table(cacheHddName) 
+    cacheTableName = 'cache_%s' % groupName
+    cacheBlkSize = FcgUtils.get_cache_blksize(cacheTableName)
+    startBlk, offsetBlk = FcgUtils.sector_offset2block_offset(oriStartSec, offset, cacheBlkSize)
+    FcgUtils.invalid_cache_blocks(cacheTableName, startBlk, offsetBlk)
     #reload group table
     cmd = 'dmsetup table %s' % groupName
     groupTable = FcgUtils.os_execue(cmd)

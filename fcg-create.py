@@ -32,7 +32,7 @@ def __create_group(groupName, cacheDev, hddSize, cacheSize):
     FcgUtils.create_table(freeName, freeTable)
 
 def create_group(groupName, cacheDev):
-    hddSize = '1T'
+    hddSize = '1P'
     cacheSize = int(FcgUtils.get_dev_sector_count(cacheDev))
     cacheSize = str(FcgUtils.sectors2Mb(cacheSize))
     __create_group(groupName, cacheDev, hddSize, cacheSize)

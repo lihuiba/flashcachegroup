@@ -58,8 +58,9 @@ def add_hdd(groupName, hddDev):
             if deviceStartSector == insertedStartSector:
                 assert offset >= insertedOffset, 'Create cache device for HDD failed...'
                 newHddTable = ' '.join(['0', str(insertedOffset), 'linear', device, str(insertedStartSector)])
-                newFreeTable += ' '.join([str(newFreeStartSec), str(offset-insertedOffset), 'linear', device, str(deviceStartSector+insertedOffset)])+'\n'
-                newFreeStartSec += (offset-insertedOffset)
+                if offset-insertedOffset > 0:
+                    newFreeTable += ' '.join([str(newFreeStartSec), str(offset-insertedOffset), 'linear', device, str(deviceStartSector+insertedOffset)])+'\n'
+                    newFreeStartSec += (offset-insertedOffset)
             else:
                 newFreeTable += ' '.join([str(newFreeStartSec), str(offset), 'linear', device, str(deviceStartSector)])+'\n'
         cacheHddName = 'cache_' + hddDev.split('/')[-1:][0]
