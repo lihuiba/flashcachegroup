@@ -25,18 +25,20 @@ to create a new group:
     fcg-create {-g|--group} <group name> {-c|--cachedev} <cache device>
 
 
-to add a hard disk to an existing group:
+to add a hard disk to a group:
 
     fcg-add {-g|--group}  <group name> {-h|--hdddev} <hdd device>
 
-to show groups and their sub-devices:
+to show group(s) and their sub-device(s):
 
     fcg-show [{-g|--group}  <group name>]
 
+to remove a hard disk from a group:
+
+    fcg-remove {-g|--group}  <group name> {-h|--hdddev} <hdd device>
+
 to delete a group:
+(all hard disks must be removed prior to deleting their group)
 
     fcg-delete {-g|--group}  <group name>
 
-to remove an existing hard disk from a group:
-
-    fcg-remove {-g|--group}  <group name> {-h|--hdddev} <hdd device>
