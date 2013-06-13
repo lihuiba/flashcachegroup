@@ -34,12 +34,16 @@ def delete_group(groupName):
     freeTableName = 'free_' + groupName
     cacheTableName = 'cache_' + groupName
 
+    ssdDev = FcgUtils.get_cache_ssd_dev(cacheTableName)
+
     FcgUtils.delete_table(freeTableName)
     for cachedDev in cachedDevices:
         FcgUtils.delete_table(cachedDev)
     FcgUtils.delete_table(cacheTableName)
     FcgUtils.delete_table(groupName)
-    #TODO: flashcache_destroy HERE!
+    
+    cmd = 'flashcache_destroy -f %s' % ssdDev
+    FcgUtils.os_execue(cmd)
 
 if __name__ == '__main__':
     groupName = parse_args(sys.argv[1:])

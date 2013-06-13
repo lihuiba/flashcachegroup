@@ -71,9 +71,16 @@ def delete_table(tableName):
     cmd = 'dmsetup remove %s'%tableName
     os_execue(cmd)
 
+def get_cache_ssd_dev(cacheTableName):
+    cmd = "dmsetup table %s|grep ssd|grep dev|awk '{print $3}'" % cacheTableName
+    ssd_dev = os_execue(cmd)[1:-2]
+    return ssd_dev
+
 def test_get_devname_from_major_minor():
     for mm in ['7:2', '253:5']:
         print get_devname_from_major_minor(mm)
+def test_get_cache_ssd_dev():
+    print get_cache_ssd_dev('cache_testgroup')
 
 if __name__ == '__main__':
-    test_get_devname_from_major_minor()
+    test_get_cache_ssd_dev()
