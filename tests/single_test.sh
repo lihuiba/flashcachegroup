@@ -38,4 +38,13 @@ python fcg-add.py -g testgroup -h $hdd1
 
 cmp $bak_hdd1 $cache_hdd1
 cmp $bak_hdd2 $cache_hdd2
+
+echo "Test 4:"
+python fcg-remove.py -g testgroup -h $hdd1
+python fcg-remove.py -g testgroup -h $hdd2
+python fcg-add.py -g testgroup -h $hdd1
+python fcg-add.py -g testgroup -h $hdd2
+cmp $bak_hdd2 $cache_hdd2
+cmp $bak_hdd1 $cache_hdd1
+
 python fcg-delete.py -g testgroup
