@@ -37,8 +37,7 @@ to remove a hard disk from a group:
 
     fcg-remove {-g|--group}  <group name> {-h|--hdddev} <hdd device>
 
-to delete a group:
-(all hard disks must be removed prior to deleting their group)
+to delete an *EMPTY* group:
 
     fcg-delete {-g|--group}  <group name>
 
