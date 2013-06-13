@@ -1,3 +1,0 @@
-flashcachegroup usage:
-    create [-g|--group <group name>] [-hs|--hddsize <hdd size>] [-cd|--cachedev <cache device>] [-cs|--cachesize <cache size>]
-    add  [-g|--group  <group name>] [-h|--hdddev <hdd device>]

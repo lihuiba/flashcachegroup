@@ -22,7 +22,7 @@ Usage
 
 to create a new group:
 
-    fcg-create {-g|--group} <group name> {-cd|--cachedev} <cache device>
+    fcg-create {-g|--group} <group name> {-c|--cachedev} <cache device>
 
 
 to add a hard disk to an existing group:

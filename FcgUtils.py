@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 import commands, tempfile
 def bytes2sectors(bytes):
-    if bytes.endswith('G') or bytes.endswith('g'):
+    if bytes.endswith('T') or bytes.endswith('t'):
+        bytes = int(bytes[:-1])*1024*1024*1024*1024
+    elif bytes.endswith('G') or bytes.endswith('g'):
         bytes = int(bytes[:-1])*1024*1024*1024
     elif bytes.endswith('M') or bytes.endswith('m'):
         bytes = int(bytes[:-1])*1024*1024
@@ -12,6 +14,9 @@ def bytes2sectors(bytes):
     sectors = bytes/512
     return sectors
 
+def sectors2Mb(sectors):
+    return str(sectors*512/1024/1024) + 'M'
+
 def os_execue(cmd):
     try:
         ret, output = commands.getstatusoutput(cmd)
@@ -19,7 +24,8 @@ def os_execue(cmd):
             return output
         else:
             raise 'Execute %s failed...'%cmd
-    except:
+    except Exception, e:
+        print e
         print 'Execute %s failed!' % cmd
         return None
 
