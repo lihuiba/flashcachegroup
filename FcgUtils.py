@@ -32,21 +32,6 @@ def sector_offset2block_offset(startSector, offset, blkSize):
     offsetBlk = offset * 512 / blkSize
     return startBlk, offsetBlk
 
-def bytes2sectors(bytes):
-    # divide early to decrease the changce of overflow
-    if bytes.endswith('T') or bytes.endswith('t'):
-        bytes = int(bytes[:-1])*1024/512*1024*1024*1024
-    elif bytes.endswith('G') or bytes.endswith('g'):
-        bytes = int(bytes[:-1])*1024/512*1024*1024
-    elif bytes.endswith('M') or bytes.endswith('m'):
-        bytes = int(bytes[:-1])*1024/512*1024
-    elif bytes.endswith('K') or bytes.endswith('k'):
-        bytes = int(bytes[:-1])*1024/512
-    else:
-        bytes = int(bytes)*1024/512*1024
-    sectors = bytes#/512
-    return sectors
-
 #should be 'MB'
 def sectors2Mb(sectors):
     return str(sectors*512/1024/1024) + 'M'
