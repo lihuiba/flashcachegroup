@@ -39,6 +39,7 @@ def delete_group(groupName):
         FcgUtils.delete_table(cachedDev)
     FcgUtils.delete_table(cacheTableName)
     FcgUtils.delete_table(groupName)
+    #TODO: flashcache_destroy HERE!
 
 if __name__ == '__main__':
     groupName = parse_args(sys.argv[1:])
