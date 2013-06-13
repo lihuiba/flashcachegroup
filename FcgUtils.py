@@ -1,19 +1,21 @@
 #!/usr/bin/env python
 import commands, tempfile
 def bytes2sectors(bytes):
+    # divide early to decrease the changce of overflow
     if bytes.endswith('T') or bytes.endswith('t'):
-        bytes = int(bytes[:-1])*1024*1024*1024*1024
+        bytes = int(bytes[:-1])*1024/512*1024*1024*1024
     elif bytes.endswith('G') or bytes.endswith('g'):
-        bytes = int(bytes[:-1])*1024*1024*1024
+        bytes = int(bytes[:-1])*1024/512*1024*1024
     elif bytes.endswith('M') or bytes.endswith('m'):
-        bytes = int(bytes[:-1])*1024*1024
+        bytes = int(bytes[:-1])*1024/512*1024
     elif bytes.endswith('K') or bytes.endswith('k'):
-        bytes = int(bytes[:-1])*1024
+        bytes = int(bytes[:-1])*1024/512
     else:
-        bytes = int(bytes)*1024*1024
-    sectors = bytes/512
+        bytes = int(bytes)*1024/512*1024
+    sectors = bytes#/512
     return sectors
 
+#should be 'MB'
 def sectors2Mb(sectors):
     return str(sectors*512/1024/1024) + 'M'
 
@@ -35,7 +37,9 @@ def write2tempfile(content):
     temp.close()
     return temp.name
 
+
 def get_devname_from_major_minor(majorMinor):
+    # try os.readlink('/dev/block/<major>:<minor>')
     cmd = "ls -l /dev/block|awk '{print $9, $11}'|grep %s" % majorMinor
     _, deviceName = os_execue(cmd).split()
     deviceName = deviceName.split('/')[-1:][0]
@@ -47,6 +51,7 @@ def get_devname_from_major_minor(majorMinor):
         return '/dev/%s' % deviceName
 
 def get_dev_sector_count(dev):
+    # try /dev/block/xxx/size
     cmd = 'blockdev --getsz %s'%dev
     devSector = os_execue(cmd)
     if type(devSector) != int:
@@ -56,6 +61,7 @@ def get_dev_sector_count(dev):
 def create_table(tableName, tableContent):
     tmpTableFile = write2tempfile(tableContent) 
     cmd = 'dmsetup create %s %s' % (tableName, tmpTableFile)
+    # try using pipe instead of temp file via os.subprocess
     os_execue(cmd)
 
 def reload_table(tableName, tableContent):
