@@ -37,6 +37,6 @@ to delete a group:
 
     fcg-delete {-g|--group}  <group name>
 
-to remove an existing hard disk from an group:
+to remove an existing hard disk from a group:
 
     fcg-remove {-g|--group}  <group name> {-h|--hdddev} <hdd device>
