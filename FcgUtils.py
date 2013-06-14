@@ -94,6 +94,81 @@ def delete_table(tableName):
     cmd = 'dmsetup remove %s'%tableName
     os_execue(cmd)
 
+def get_table_str(tableName):
+    cmd = 'dmsetup table %s' % tableName
+    tableContent = os_execue(cmd)
+    assert tableContent != '', 'Could NOT find %s in dm table' % tableName
+    return tableContent
+
+def get_table_struct_from_str(tableStr):
+    tableStruct = []
+    tableList = tableStr.split('\n')
+    for tableLine in tableList:
+        tableLineList = tableLine.split()
+        tempDict = {}
+        if len(tableLineList) == 5:
+            startSec, offset, type, oriDev, oriStartSec = tableLineList
+            oriDev = get_devname_from_major_minor(oriDev)
+            startSec, offset, oriStartSec = map(int, [startSec, offset, oriStartSec])
+            tempDict = {'startSec':startSec, 'offset':offset, 'type':type, 'oriDev':oriDev, 'oriStartSec':oriStartSec}
+        elif len(tableLineList) == 3:
+            startSec, offset, type = tableLineList
+            startSec, offset = map(int, [startSec, offset])
+            tempDict = {'startSec':startSec, 'offset':offset, 'type':type}
+        else:
+            print 'Could NOT support table format %s' % tableLine
+
+        if len(tempDict) != 0:
+            tableStruct.append(tempDict)
+    return tableStruct
+
+def get_table_str_from_struct(tableStruct):
+    tableStr = ''
+    for line in tableStruct:
+        if len(line) == 5:
+            tableStr += ' '.join([str(line['startSec']), str(line['offset']), line['type'], line['oriDev'], str(line['oriStartSec'])]) + '\n'
+        elif len(line) == 3:
+            tableStr += ' '.join([str(line['startSec']), str(line['offset']), line['type']]) + '\n'
+    return tableStr
+            
+def adjust_table_strust(tableStruct):
+    '''Merge adjacent error line in table struct '''
+    adjustTable = []
+    preSec = 0
+    preOffset = 0
+    preType = ''
+    for line in tableStruct:
+        if len(line) == 3:
+            startSec, offset, type = [line['startSec'], line['offset'], line['type']]
+            assert line['type'] == 'error', 'something WRONG in group table'
+            if preType == 'error':
+                preOffset += offset
+            else:
+                preSec, preOffset, preType = [startSec, offset, type]
+        elif len(line) == 5:
+            startSec, offset, type, oriDev, oriStartSec = [line['startSec'], line['offset'], line['type'], line['oriDev'], line['oriStartSec']]
+            if preType == 'error':
+                tempDict = {'startSec':preSec, 'offset':preOffset, 'type':preType}
+                adjustTable.append(tempDict)
+            adjustTable.append(line)
+            preSec, preOffset, preType = [startSec, offset, type]
+    if preType == 'error':
+        tempDict = {'startSec':preSec, 'offset':preOffset, 'type':preType}
+        adjustTable.append(tempDict)
+    return adjustTable
+
+def get_free_table_from_group(groupStruct, cacheGroupDev):
+    startSec = 0
+    freeTable = []
+    for line in groupStruct:
+        if len(line) == 3:
+            offset = line['offset']
+            oriStartSec = line['startSec']
+            tempDict = {'startSec':startSec, 'offset':offset, 'type':'linear', 'oriDev':cacheGroupDev, 'oriStartSec':oriStartSec}
+            freeTable.append(tempDict)
+            startSec += offset
+    return freeTable
+                
 def get_cache_ssd_dev(cacheTableName):
     cmd = "dmsetup table %s|grep ssd|grep dev|awk '{print $3}'" % cacheTableName
     ssd_dev = os_execue(cmd)[1:-2]
@@ -105,8 +180,8 @@ def get_cache_blksize(cacheTableName):
     blkSize = tmpSizeStr[tmpSizeStr.find('(')+1: tmpSizeStr.find(')')]
     return blkSize
 
-def invalid_cache_blocks(cacheTableName, startBlk, offsetBlk):
-    cmd = 'flashcache_invalidate /dev/mapper/%s %s %s' % (cacheTableName, startBlk, offsetBlk)
+def invalid_cache_blocks(cacheGroupDev, startBlk, offsetBlk):
+    cmd = 'flashcache_invalidate %s %s %s' % (cacheGroupDev, startBlk, offsetBlk)
     os_execue(cmd)
 
 def test_get_devname_from_major_minor():

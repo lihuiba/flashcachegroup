@@ -10,7 +10,6 @@ cache_hdd1="/dev/mapper/cache_loop2"
 cache_hdd2="/dev/mapper/cache_loop3"
 echo "Test start at time: "
 echo `date`
-echo "If cmp diff occurs in log, then test failed..."
 cd ..
 python fcg-create.py -g testgroup -c $ssd
 echo "Test 1:"

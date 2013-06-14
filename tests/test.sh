@@ -1,5 +1,5 @@
 #!/bin/sh
-for i in `seq 1 10000`
+for i in `seq 1 100`
 do
     echo "----------$i----------" >> test.log
     ./single_test.sh >> test.log
