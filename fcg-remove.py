@@ -43,7 +43,7 @@ def remove_hdd(groupName, hddDev):
             if groupLine['offset'] == cacheLine['offset'] and groupLine['oriDev'] == hddDev:
                 groupTabStruct[i] = {'startSec':groupLine['startSec'], 'offset':groupLine['offset'], 'type':'error'}
                 break
-    groupTabStruct = FcgUtils.adjust_table_strust(groupTabStruct)
+    groupTabStruct = FcgUtils.adjust_table_struct(groupTabStruct)
     freeTabStruct = FcgUtils.get_free_table_from_group(groupTabStruct, cacheGroupDev)
     #reload group and free table 
     freeName = 'free_%s' % groupName

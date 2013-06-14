@@ -131,7 +131,7 @@ def get_table_str_from_struct(tableStruct):
             tableStr += ' '.join([str(line['startSec']), str(line['offset']), line['type']]) + '\n'
     return tableStr
             
-def adjust_table_strust(tableStruct):
+def adjust_table_struct(tableStruct):
     '''Merge adjacent error line in table struct '''
     adjustTable = []
     preSec = 0
