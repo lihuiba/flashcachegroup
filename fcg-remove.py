@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys, getopt
 import FcgUtils
+from FcgTable import FcgTable
 
 def parse_args(cmdline):
     try:
@@ -19,6 +20,10 @@ def parse_args(cmdline):
     return groupName, hddDev
 
 def remove_hdd(groupName, hddDev):
+
+    #cacheTable = FcgTable('cache_' + hddDev.split('/')[-1:][0])
+    
+
     hddName = hddDev.split('/')[-1:][0]
     cacheHddName = 'cache_' + hddName
     cacheHddTabStr = FcgUtils.get_table_str(cacheHddName)

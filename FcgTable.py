@@ -54,6 +54,7 @@ class FcgTable:
         cmd = 'dmsetup suspend %s'%self.name
         FcgUtils.os_execue(cmd)
         tableContent = self._get_table_content()
+        print self.name + '\t' + tableContent
         tmpTableFile = FcgUtils.write2tempfile(tableContent)
         cmd = 'dmsetup reload %s %s' % (self.name, tmpTableFile)
         FcgUtils.os_execue(cmd)
