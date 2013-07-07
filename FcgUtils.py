@@ -42,10 +42,11 @@ def os_execue(cmd):
         if ret == '0' or ret == 0:
             return output
         else:
-            raise 'Execute %s failed...'%cmd
+            #print 'Execute %s failed...'%cmd
+            return None
     except Exception, e:
+        print 'Execute %s failed!' % cmd,
         print e
-        print 'Execute %s failed!' % cmd
         return None
 
 def write2tempfile(content):
