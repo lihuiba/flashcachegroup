@@ -40,7 +40,6 @@ def add_hdd(groupName, hddDev):
     newLines = []
     cacheHddTableContent = ''
     for line in freeTable.lines:
-        #line = freeTable.lines[i]
         if line['oriStartSec'] == startSec:
             assert line['offset'] >= devSectorCount, 'Create cache device for HDD failed...'
             newFreeLine = {'startSec':newFreeStartSec, 'offset':line['offset']-devSectorCount, 'type':'linear', 'oriDev':line['oriDev'], 'oriStartSec':line['oriStartSec']+devSectorCount}
@@ -54,9 +53,6 @@ def add_hdd(groupName, hddDev):
     freeTable.lines = newLines
     cacheTable = FcgTable('cache_' + hddDev.split('/')[-1:][0])
     cacheTable.set_lines(cacheHddTableContent)
-    print groupTable.lines
-    print freeTable.lines
-    print cacheTable.lines
     groupTable.reload()
     freeTable.reload()
     cacheTable.create()
