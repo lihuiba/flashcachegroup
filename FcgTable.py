@@ -17,6 +17,33 @@ class FcgTable:
         if len(tempLines) != 0:
             self.lines = tempLines
 
+    def adjust_lines(self):
+        '''Merge adjacent error line in table struct '''
+        tableStruct = self.lines
+        adjustTable = []
+        preSec = 0
+        preOffset = 0
+        preType = ''
+        for line in tableStruct:
+            if len(line) == 3:
+                startSec, offset, type = [line['startSec'], line['offset'], line['type']]
+                assert line['type'] == 'error', 'something WRONG in group table'
+                if preType == 'error':
+                    preOffset += offset
+                else:
+                    preSec, preOffset, preType = [startSec, offset, type]
+            elif len(line) == 5:
+                startSec, offset, type, oriDev, oriStartSec = [line['startSec'], line['offset'], line['type'], line['oriDev'], line['oriStartSec']]
+                if preType == 'error':
+                    tempDict = {'startSec':preSec, 'offset':preOffset, 'type':preType}
+                    adjustTable.append(tempDict)
+                adjustTable.append(line)
+                preSec, preOffset, preType = [startSec, offset, type]
+        if preType == 'error':
+            tempDict = {'startSec':preSec, 'offset':preOffset, 'type':preType}
+            adjustTable.append(tempDict)
+        self.lines = adjustTable
+
     def create(self, tableStr=''):
         '''create a table via dmsetup'''
         if self.existed:
@@ -48,13 +75,18 @@ class FcgTable:
                     return False
 
     def delete(self):
-        pass
+        if self.is_existed():
+            cmd = 'dmsetup remove %s'%self.name
+            FcgUtils.os_execue(cmd)
+            return True
+        else:
+            print 'Table %s does NOT existed...' % self.name
+            return False
 
     def reload(self):
         cmd = 'dmsetup suspend %s'%self.name
         FcgUtils.os_execue(cmd)
         tableContent = self._get_table_content()
-        print self.name + '\t' + tableContent
         tmpTableFile = FcgUtils.write2tempfile(tableContent)
         cmd = 'dmsetup reload %s %s' % (self.name, tmpTableFile)
         FcgUtils.os_execue(cmd)

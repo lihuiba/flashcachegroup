@@ -20,42 +20,39 @@ def parse_args(cmdline):
     return groupName, hddDev
 
 def remove_hdd(groupName, hddDev):
+    groupTable = FcgTable(groupName)
+    if not groupTable.is_existed():
+        print 'Group %s does NOT exist...' % groupName
+        return False
 
-    #cacheTable = FcgTable('cache_' + hddDev.split('/')[-1:][0])
-    
+    cacheHddTable = FcgTable('cache_' + hddDev.split('/')[-1:][0])
+    if not cacheHddTable.is_existed():
+        print 'hdd %s does NOT exist in group %s...' % (hddDev, groupName)
+        return False
 
-    hddName = hddDev.split('/')[-1:][0]
-    cacheHddName = 'cache_' + hddName
-    cacheHddTabStr = FcgUtils.get_table_str(cacheHddName)
-    cacheHddTabStruct = FcgUtils.get_table_struct_from_str(cacheHddTabStr)
-    assert len(cacheHddTabStruct) == 1, 'Multi line found in table of %s' % cacheHddName
-    cacheLine = cacheHddTabStruct[0]
-    assert len(cacheLine) == 5, 'Could NOT support table format for %s\n Table is %s' % (cacheHddName, cacheHddTabStr)
-    #delete cache_hdd table here
-    FcgUtils.delete_table(cacheHddName)
-    #invalid falshcache data of cache_hdd
+    assert len(cacheHddTable.lines) == 1, 'Multi line found in table of %s' % cacheHddTable.name
+    cacheLine = cacheHddTable.lines[0]
+    assert len(cacheLine) == 5, 'Could NOT support table format for %s' % (cacheHddTable.name)
+    cacheHddTable.delete()
+
+    #invalid cache blocks
     cacheGroupName = 'cache_%s' % groupName
     cacheGroupDev = '/dev/mapper/%s' % cacheGroupName
     cacheBlkSize = FcgUtils.get_cache_blksize(cacheGroupName)
     startBlk, offsetBlk = FcgUtils.sector_offset2block_offset(cacheLine['oriStartSec'], cacheLine['offset'], cacheBlkSize)
-    FcgUtils.invalid_cache_blocks(cacheGroupDev, startBlk, offsetBlk) 
-    #delete hdd line from group table
-    groupTabStr = FcgUtils.get_table_str(groupName)
-    groupTabStruct = FcgUtils.get_table_struct_from_str(groupTabStr)
-    for i in range(len(groupTabStruct)):
-        groupLine = groupTabStruct[i]
+    FcgUtils.invalid_cache_blocks(cacheGroupDev, startBlk, offsetBlk)
+    
+    for i in range(len(groupTable.lines)):
+        groupLine = groupTable.lines[i]
         if len(groupLine) == 5:
             if groupLine['offset'] == cacheLine['offset'] and groupLine['oriDev'] == hddDev:
-                groupTabStruct[i] = {'startSec':groupLine['startSec'], 'offset':groupLine['offset'], 'type':'error'}
+                groupTable.lines[i] = {'startSec':groupLine['startSec'], 'offset':groupLine['offset'], 'type':'error'}
                 break
-    groupTabStruct = FcgUtils.adjust_table_struct(groupTabStruct)
-    freeTabStruct = FcgUtils.get_free_table_from_group(groupTabStruct, cacheGroupDev)
-    #reload group and free table 
-    freeName = 'free_%s' % groupName
-    groupTabStr = FcgUtils.get_table_str_from_struct(groupTabStruct)
-    freeTabStr = FcgUtils.get_table_str_from_struct(freeTabStruct)
-    FcgUtils.reload_table(groupName, groupTabStr)
-    FcgUtils.reload_table(freeName, freeTabStr)
+    groupTable.adjust_lines()
+    freeTable = FcgTable('free_'+groupName)
+    freeTable.lines = FcgUtils.get_free_table_from_group(groupTable.lines, cacheGroupDev)
+    groupTable.reload()
+    freeTable.reload()
 
 if __name__ == '__main__':
     groupName, hddDev = parse_args(sys.argv[1:])
