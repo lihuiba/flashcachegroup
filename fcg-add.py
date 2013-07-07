@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys, getopt
 import FcgUtils
+from FcgTable import FcgTable
 
 def parse_args(cmdline):
     try:
@@ -20,54 +21,46 @@ def parse_args(cmdline):
 
 def add_hdd(groupName, hddDev):
     devSectorCount = FcgUtils.get_dev_sector_count(hddDev)
-    cmd = 'dmsetup table %s' % groupName
-    dmTable = FcgUtils.os_execue(cmd)
-    newTable = ''
-    hasInserted = False
-    insertedStartSector = 0
-    insertedOffset = devSectorCount
-    for tableLine in dmTable.split('\n'):
-        if tableLine.find('error') != -1 and hasInserted == False:
-            startSector, offset, error = tableLine.split()
-            startSector, offset = map(int, [startSector, offset])
-            if offset >= devSectorCount:
-                insertedStartSector = startSector
-                newTable += ' '.join([str(startSector), str(devSectorCount), 'linear', hddDev, '0'])
-                newTable += '\n'
-                hasInserted = True
-                offset -= devSectorCount
-                if offset > 0:
-                    newTable += ' '.join([str(startSector+devSectorCount), str(offset-devSectorCount), 'error'])
-                    newTable += '\n'
+    groupTable = FcgTable(groupName)
+    startSec = -1
+    offset = -1
+    for i in range(len(groupTable.lines)):
+        line = groupTable.lines[i]
+        if line['type'] == 'error' and line['offset'] >= devSectorCount:
+            startSec = line['startSec']
+            offset = line['offset']
+            newHddLine = {'startSec':startSec, 'offset':devSectorCount, 'type':'linear', 'oriDev':hddDev, 'oriStartSec':0}
+            newErrLine = {'startSec':startSec+devSectorCount, 'offset':offset-devSectorCount, 'type':'error'}
+            groupTable.lines.remove(line)
+            groupTable.lines.insert(i, newHddLine)
+            groupTable.lines.insert(i+1,newErrLine)
+            break
+    freeTable = FcgTable('free_'+groupName)
+    newFreeStartSec = 0
+    newLines = []
+    cacheHddTableContent = ''
+    for line in freeTable.lines:
+        #line = freeTable.lines[i]
+        if line['oriStartSec'] == startSec:
+            assert line['offset'] >= devSectorCount, 'Create cache device for HDD failed...'
+            newFreeLine = {'startSec':newFreeStartSec, 'offset':line['offset']-devSectorCount, 'type':'linear', 'oriDev':line['oriDev'], 'oriStartSec':line['oriStartSec']+devSectorCount}
+            newLines.append(newFreeLine)
+            cacheHddTableContent = ' '.join(['0', str(devSectorCount), 'linear', line['oriDev'], str(startSec)])
+            newFreeStartSec += line['offset']-devSectorCount
         else:
-            newTable += tableLine
-            newTable += '\n'
-    if hasInserted:
-        FcgUtils.reload_table(groupName, newTable)
+            newFreeLine = {'startSec':newFreeStartSec, 'offset':line['offset'], 'type':'linear', 'oriDev':line['oriDev'], 'oriStartSec':line['oriStartSec']}
+            newFreeStartSec += line['offset']
+            newLines.append(newFreeLine)
+    freeTable.lines = newLines
+    cacheTable = FcgTable('cache_' + hddDev.split('/')[-1:][0])
+    cacheTable.set_lines(cacheHddTableContent)
+    print groupTable.lines
+    print freeTable.lines
+    print cacheTable.lines
+    groupTable.reload()
+    freeTable.reload()
+    cacheTable.create()
 
-        freeName = 'free_'+groupName
-        cmd = 'dmsetup table %s' % freeName
-        freeTable = FcgUtils.os_execue(cmd)
-        newFreeTable = ''
-        newHddTable = ''
-        hasInsertedFree = False
-        newFreeStartSec = 0
-        for freeLine in freeTable.split('\n'):
-            startSector, offset, type, device, deviceStartSector = freeLine.split()
-            startSector, offset, deviceStartSector = map(int, [startSector, offset, deviceStartSector])
-            if deviceStartSector == insertedStartSector:
-                assert offset >= insertedOffset, 'Create cache device for HDD failed...'
-                newHddTable = ' '.join(['0', str(insertedOffset), 'linear', device, str(insertedStartSector)])
-                if offset-insertedOffset > 0:
-                    newFreeTable += ' '.join([str(newFreeStartSec), str(offset-insertedOffset), 'linear', device, str(deviceStartSector+insertedOffset)])+'\n'
-                    newFreeStartSec += (offset-insertedOffset)
-            else:
-                newFreeTable += ' '.join([str(newFreeStartSec), str(offset), 'linear', device, str(deviceStartSector)])+'\n'
-        cacheHddName = 'cache_' + hddDev.split('/')[-1:][0]
-        #print newFreeTable
-        #print newHddTable
-        FcgUtils.reload_table(freeName, newFreeTable)
-        FcgUtils.create_table(cacheHddName, newHddTable)
 if __name__ == '__main__':
     groupName, hddDev = parse_args(sys.argv[1:])
     add_hdd(groupName, hddDev)

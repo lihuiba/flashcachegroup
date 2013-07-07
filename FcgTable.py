@@ -51,7 +51,14 @@ class FcgTable:
         pass
 
     def reload(self):
-        pass
+        cmd = 'dmsetup suspend %s'%self.name
+        FcgUtils.os_execue(cmd)
+        tableContent = self._get_table_content()
+        tmpTableFile = FcgUtils.write2tempfile(tableContent)
+        cmd = 'dmsetup reload %s %s' % (self.name, tmpTableFile)
+        FcgUtils.os_execue(cmd)
+        cmd = 'dmsetup resume %s'%self.name
+        FcgUtils.os_execue(cmd)
 
     def is_existed(self):
         return self.existed
