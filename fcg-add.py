@@ -43,23 +43,13 @@ def add_hdd(groupName, hddDev):
                 groupTable.lines.insert(i+1,newErrLine)
             break
     freeTable = FcgTable('free_'+groupName)
-    newFreeStartSec = 0
-    newLines = []
-    cacheHddTableContent = ''
-    for line in freeTable.lines:
-        if line['oriStartSec'] == startSec:
-            assert line['offset'] >= devSectorCount, 'Create cache device for HDD failed...'
-            if line['offset'] > devSectorCount:
-                newFreeLine = {'startSec':newFreeStartSec, 'offset':line['offset']-devSectorCount, 'type':'linear', 'oriDev':line['oriDev'], 'oriStartSec':line['oriStartSec']+devSectorCount}
-                newLines.append(newFreeLine)
-                newFreeStartSec += line['offset']-devSectorCount
-            cacheHddTableContent = ' '.join(['0', str(devSectorCount), 'linear', line['oriDev'], str(startSec)])
-        else:
-            newFreeLine = {'startSec':newFreeStartSec, 'offset':line['offset'], 'type':'linear', 'oriDev':line['oriDev'], 'oriStartSec':line['oriStartSec']}
-            newFreeStartSec += line['offset']
-            newLines.append(newFreeLine)
-    freeTable.lines = newLines
-    cacheTable.set_lines(cacheHddTableContent)
+    cacheGroupName = 'cache_%s' % groupName
+    cacheGroupDev = '/dev/mapper/%s' % cacheGroupName
+    freeTable.lines = FcgUtils.get_free_table_from_group(groupTable.lines, cacheGroupDev)
+
+    cacheTableContent = ' '.join(['0', str(devSectorCount), 'linear', cacheGroupDev, str(startSec)])
+    cacheTable.set_lines(cacheTableContent)
+
     groupTable.reload()
     freeTable.reload()
     cacheTable.create()
