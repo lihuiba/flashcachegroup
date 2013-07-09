@@ -78,6 +78,7 @@ class FcgTable:
         if self.is_existed():
             cmd = 'dmsetup remove %s'%self.name
             FcgUtils.os_execue(cmd)
+            self.existed = False
             return True
         else:
             print 'Table %s does NOT existed...' % self.name
@@ -109,7 +110,10 @@ class FcgTable:
             self.lines = []
             self.existed = False
         else:
-            self.lines = self._get_table_lines(tableContent)
+            try:
+                self.lines = self._get_table_lines(tableContent)
+            except:
+                self.lines = []
             self.existed = True
 
     def _get_table_str(self):
@@ -141,7 +145,8 @@ class FcgTable:
             elif len(tableLineList) == 0:
                 pass
             else:
-                print 'Could NOT support table format %s' % tableLine
+                #print 'Could NOT support table format %s' % tableLine
+                pass
 
             if len(tempDict) != 0:
                 tableStruct.append(tempDict)
