@@ -1,5 +1,5 @@
 #!/bin/sh
-for i in `seq 1 365`
+for i in `seq 1 10`
 do
     echo "----------$i----------" 
     echo "----------$i----------" >> log

@@ -39,5 +39,5 @@ to remove a hard disk from a group:
 
 to delete an *EMPTY* group:
 
-    fcg-delete {-g|--group}  <group name>
+    fcg-delete {-g|--group}  <group name> {-f|--force}
 
