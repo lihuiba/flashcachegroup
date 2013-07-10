@@ -20,13 +20,18 @@ def parse_args(cmdline):
     return groupName, hddDev
 
 def add_hdd(groupName, hddDev):
+    groupTable = FcgTable(groupName)
+    if not groupTable.is_existed():
+        print 'Group %s does NOT exist...' % groupName
+        return False
+        
     cacheTable = FcgTable('cache_' + hddDev.split('/')[-1:][0])
     if cacheTable.is_existed():
         print 'Hdd %s has already been existed...'%hddDev
         return False
 
     devSectorCount = FcgUtils.get_dev_sector_count(hddDev)
-    groupTable = FcgTable(groupName)
+ 
     startSec = -1
     offset = -1
     for i in range(len(groupTable.lines)):
