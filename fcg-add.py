@@ -41,17 +41,12 @@ def add_hdd(groupName, hddDev):
             offset = line['offset']
             newHddLine = {'startSec':startSec, 'offset':devSectorCount, 'type':'linear', 'oriDev':hddDev, 'oriStartSec':0}
             
-            #groupTable.lines.remove(line)
-            #groupTable.lines.insert(i, newHddLine)
-            #if line['offset'] > devSectorCount:
-            #    newErrLine = {'startSec':startSec+devSectorCount, 'offset':offset-devSectorCount, 'type':'error'}
-            #    groupTable.lines.insert(i+1,newErrLine)
             if line['offset'] > devSectorCount:
                 line['startSec'] += devSectorCount
                 line['offset'] -= devSectorCount
-                groupTable.lines.insert(i, newErrLine)
+                groupTable.lines.insert(i, newHddLine)
             else: #line['offset'] == devSectorCount:
-                groupTable.lines[i] = newErrLine
+                groupTable.lines[i] = newHddLine
             break
     freeTable = FcgTable('free_'+groupName)
     cacheGroupName = 'cache_%s' % groupName
