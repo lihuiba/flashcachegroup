@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys, getopt
 import FcgUtils
+from FcgTable import FcgTable
 
 def parse_args(cmdline):
     try:
@@ -17,26 +18,20 @@ def parse_args(cmdline):
     return groupName
 
 def show_group(groupName):
-    cmd = 'dmsetup table %s' % groupName
-    groupTable = FcgUtils.os_execue(cmd)
-    hardDisks = []
-    cachedHardDisks = []
-    for groupLine in groupTable.split('\n'):
-        groupLine = groupLine.split()
-        if len(groupLine) == 5:
-            startGroupSec, offsetGroup, typeGroup, oriGroupDev, oriGroupStartSec = groupLine
-            startGroupSec, offsetGroup, oriGroupStartSec = map(int, [startGroupSec, offsetGroup, oriGroupStartSec])
-            oriGroupDev = FcgUtils.get_devname_from_major_minor(oriGroupDev)
-            hardDisks.append(oriGroupDev)
-            cachedHardDisk = '/dev/mapper/cache_%s' % oriGroupDev.split('/')[-1:][0]
-            cachedHardDisks.append(cachedHardDisk)
-    print 'Flashcache group name:', groupName
-    print 'Consists of hard disks:'
-    print '\t', '\t'.join(hardDisks)
-    print 'Serves following cached disks:'
-    print '\t', '\t'.join(cachedHardDisks)
-    
+    groupTable = FcgTable(groupName)
+    if not groupTable.is_existed():
+        print 'Group %s does NOT exist...' % groupName
+        return False
 
+    hardDisks = []
+    for line in groupTable.lines:
+        if line['type'] == 'linear':
+            hardDisks.append(line['oriDev'])
+
+    print 'Flashcache group name:', groupName
+    print 'Consists of following hard disks:'
+    print '\t', '\t'.join(hardDisks)
+    
 if __name__ == '__main__':
     groupName = parse_args(sys.argv[1:])
     show_group(groupName)
