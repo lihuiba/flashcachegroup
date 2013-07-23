@@ -68,7 +68,7 @@ class FcgTable:
             else:
                 tmpTableFile = FcgUtils.write2tempfile(tableContent)
                 cmd = 'dmsetup create %s %s' % (self.name, tmpTableFile)
-                if FcgUtils.os_execue(cmd):
+                if FcgUtils.os_execue(cmd) != None:
                     self.existed = True
                     return True
                 else:
