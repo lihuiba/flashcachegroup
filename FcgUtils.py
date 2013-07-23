@@ -73,7 +73,10 @@ def get_dev_sector_count(dev):
     cmd = 'blockdev --getsz %s'%dev
     devSector = os_execue(cmd)
     if type(devSector) != int:
-        devSector = int(devSector)
+        try:
+            devSector = int(devSector)
+        except:
+            return 0
     return devSector
 
 def get_free_table_from_group(groupStruct, cacheGroupDev):
@@ -112,4 +115,4 @@ def test_get_cache_blksize():
     print get_cache_blksize('cache_testgroup')
 
 if __name__ == '__main__':
-    test_get_cache_blksize()
+    pass

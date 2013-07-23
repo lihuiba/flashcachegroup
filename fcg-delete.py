@@ -32,7 +32,6 @@ def delete_group(groupName, force=False):
     for line in groupTable.lines:
         if len(line) == 5:
             hddDevice = line['oriDev']
-            #hddDevice = FcgUtils.get_devname_from_major_minor(hddMajorMinor)
             hddDevices.append(hddDevice)
             hddName = hddDevice.split('/')[-1:][0]
             hddNames.append(hddName)
