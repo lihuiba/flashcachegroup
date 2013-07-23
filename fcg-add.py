@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, getopt
+import sys, getopt, os
 import FcgUtils
 from FcgTable import FcgTable
 
@@ -27,10 +27,17 @@ def add_hdd(groupName, hddDev):
         
     cacheTable = FcgTable('cache_' + hddDev.split('/')[-1:][0])
     if cacheTable.is_existed():
-        print 'Hdd %s has already been existed...'%hddDev
+        print 'Hdd %s has already been existed in the group...'%hddDev
+        return False
+
+    if not os.path.exists(hddDev):
+        print 'Hdd %s does NOT exist at all...' % hddDev
         return False
 
     devSectorCount = FcgUtils.get_dev_sector_count(hddDev)
+    if devSectorCount <= 0:
+        print 'Hdd %s should NOT be empty...' % hddDev
+        return False
  
     startSec = -1
     offset = -1
