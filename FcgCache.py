@@ -18,7 +18,9 @@ class FcgCacheGroup(FcgTable):
 
     def delete(self):
         ssdDev = self.get_cache_ssd_dev()
-        FcgTable.delete(self)
+        ret = FcgTable.delete(self)
+        if ret == False:
+            return False
         cmd = 'flashcache_destroy -f %s' % ssdDev
         FcgUtils.os_execute(cmd)
 
