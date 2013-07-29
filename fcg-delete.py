@@ -49,7 +49,10 @@ def delete_group(groupName, force=False):
     for cachedDev in cachedDevices:
         cacheHddTable = FcgTable(cachedDev)
         cacheHddTable.delete()
-    cacheGroup.delete()
+    try:
+        cacheGroup.delete()
+    except:
+        pass
     groupTable.delete()
     
 if __name__ == '__main__':
