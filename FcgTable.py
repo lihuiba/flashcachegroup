@@ -17,7 +17,7 @@ class FcgTable:
         if len(tempLines) != 0:
             self.lines = tempLines
 
-    def adjust_lines(self):
+    def _adjust_lines(self):
         '''Merge adjacent error line in table struct '''
         tableStruct = self.lines
         adjustTable = []
@@ -68,31 +68,48 @@ class FcgTable:
             else:
                 tmpTableFile = FcgUtils.write2tempfile(tableContent)
                 cmd = 'dmsetup create %s %s' % (self.name, tmpTableFile)
-                if FcgUtils.os_execue(cmd) != None:
+                try:
+                    FcgUtils.os_execute(cmd)
                     self.existed = True
                     return True
-                else:
+                except Exception, ErrMsg:
+                    print cmd + ': ' + ErrMsg
+                    self.delete()
                     return False
 
     def delete(self):
         if self.is_existed():
             cmd = 'dmsetup remove %s'%self.name
-            FcgUtils.os_execue(cmd)
-            self.existed = False
-            return True
+            try:
+                FcgUtils.os_execute(cmd)
+                self.existed = False
+                return True
+            except Exception, ErrMsg:
+                print cmd + ': ' + ErrMsg
+                return False
         else:
             print 'Table %s does NOT existed...' % self.name
             return False
 
     def reload(self):
+        self._adjust_lines()
         cmd = 'dmsetup suspend %s'%self.name
-        FcgUtils.os_execue(cmd)
+        try:
+            FcgUtils.os_execute(cmd)
+        except Exception, ErrMsg:
+            print cmd + ': ' + ErrMsg
         tableContent = self._get_table_content()
         tmpTableFile = FcgUtils.write2tempfile(tableContent)
         cmd = 'dmsetup reload %s %s' % (self.name, tmpTableFile)
-        FcgUtils.os_execue(cmd)
+        try:
+            FcgUtils.os_execute(cmd)
+        except Exception, ErrMsg:
+            print cmd + ': ' + ErrMsg
         cmd = 'dmsetup resume %s'%self.name
-        FcgUtils.os_execue(cmd)
+        try:
+            FcgUtils.os_execute(cmd)
+        except:
+            print cmd + ': ' + ErrMsg
 
     def is_existed(self):
         return self.existed
@@ -118,8 +135,11 @@ class FcgTable:
 
     def _get_table_str(self):
         cmd = 'dmsetup table %s' % self.name
-        tableContent = FcgUtils.os_execue(cmd)
-        return tableContent
+        try:
+            tableContent = FcgUtils.os_execute(cmd)
+            return tableContent
+        except:
+            return None
 
     def _get_table_lines(self, tableStr):
         if tableStr == '' or tableStr == None:

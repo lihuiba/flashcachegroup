@@ -2,7 +2,7 @@
 import sys, getopt
 import FcgUtils
 from FcgTable import FcgTable
-
+from FcgCache import FcgCacheGroup
 def parse_args(cmdline):
     try:
         opts, args = getopt.getopt(cmdline, "g:f", ["group=", "force"])
@@ -42,21 +42,16 @@ def delete_group(groupName, force=False):
         return None
 
     freeTable = FcgTable('free_' + groupName)
-    cacheTableName = 'cache_' + groupName
-    cacheGroupTable = FcgTable('cache_' + groupName)
-
-    ssdDev = FcgUtils.get_cache_ssd_dev(cacheTableName)
+    cacheName = 'cache_' + groupName
+    cacheGroup = FcgCacheGroup('cache_' + groupName)
 
     freeTable.delete()
     for cachedDev in cachedDevices:
         cacheHddTable = FcgTable(cachedDev)
         cacheHddTable.delete()
-    cacheGroupTable.delete()
+    cacheGroup.delete()
     groupTable.delete()
     
-    cmd = 'flashcache_destroy -f %s' % ssdDev
-    FcgUtils.os_execue(cmd)
-
 if __name__ == '__main__':
     groupName, force = parse_args(sys.argv[1:])
     delete_group(groupName, force)
