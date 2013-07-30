@@ -1,33 +1,13 @@
 #!/usr/bin/env python
-import sys, os, commands, tempfile, hashlib
-
-def _index(alist, element):
-    try:
-        index = alist.index(element)
-        return index
-    except:
-        return -1
+import sys, os, commands, tempfile, argparse
 
 def parse_args(cmdline):
-    groupName = ''
-    groupIndex = max(_index(cmdline, '-g'), _index(cmdline, '--group'))
-    groupName = cmdline[groupIndex+1]
-    cmdline.remove(cmdline[groupIndex])
-    cmdline.remove(groupName)
-
-    hddIndex = max(_index(cmdline, '-h'), _index(cmdline, '--hdddev'))
-    cacheIndex = max(_index(cmdline, '-c'), _index(cmdline, '--cachedev'))
-    hddDevs = []
-    cacheDevs = []
-    if hddIndex < cacheIndex:
-        hddDevs = cmdline[hddIndex+1:cacheIndex]
-        cacheDevs = cmdline[cacheIndex+1:]
-    else:
-        hddDevs = cmdline[hddIndex+1:]
-        cacheDevs = cmdline[cacheIndex+1:hddIndex] 
-    if groupName == '' or len(hddDevs) == 0 or len(cacheDevs) == 0:
-        sys.exit()
-    return groupName, hddDevs, cacheDevs
+    parser = argparse.ArgumentParser(description='This is a description of %(prog)s', epilog='This is a epilog of %(prog)s', prefix_chars='-+', fromfile_prefix_chars='@', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-g', '--group', type=str)
+    parser.add_argument('-d', '--disk', nargs='+', type=str)
+    parser.add_argument('-c', '--cachedev', nargs='+', type=str)
+    args = parser.parse_args(cmdline)
+    return args.group, args.disk, args.cachedev
 
 def _os_execute(cmd):
     ret, output = commands.getstatusoutput(cmd)
@@ -101,6 +81,19 @@ def _create_flashcache(cacheName, cacheDevice, groupDevice):
         print ErrMsg
         return False
 
+def _delete_flashcache(cacheName, cacheDevice):
+    ret = _delete_table(cacheName)
+    if ret == False:
+        return False
+    cmd = 'flashcache_destroy -f %s' % cacheDevice
+    try:
+        _os_execute(cmd)
+        return True
+    except Exception, ErrMsg:
+        print cmd + ': ',
+        print ErrMsg
+        return False
+
 def _get_device_name(device):
     name = device.split('/')[-1:][0]
     return name
@@ -159,9 +152,16 @@ def create_group(groupName, hddDevs, cacheDevs):
     cacheGroupDevice = '/dev/mapper/%s' % cacheName
     cachedNames, cachedTables = _cached_tables(hddDevs, cacheGroupDevice)
     for i in range(len(cachedNames)):
-        _create_table(cachedNames[i], cachedTables[i])
+        ret = _create_table(cachedNames[i], cachedTables[i])
+        if ret == False:
+            for j in range(i):
+                _delete_table(cachedNames[j])
+            _delete_flashcache(cacheName, cacheDevice)
+            _delete_table(groupName)
+            _delete_table(cacheDevName)
+            return
         
 if __name__ == '__main__':
     groupName, hddDevs, cacheDevs = parse_args(sys.argv[1:])
-    create_group(groupName, hddDevs, cacheDevs)
+    #create_group(groupName, hddDevs, cacheDevs)
 
