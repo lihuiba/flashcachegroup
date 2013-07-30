@@ -41,3 +41,14 @@ to delete an *EMPTY* group:
 
     fcg-delete {-g|--group}  <group name> {-f|--force}
 
+fcg-easy
+=====================
+
+to create a new group by using hard disks:
+
+    fcg-easy create [-h] [-g GROUP] [-d DISK [DISK ...]]
+                          [-c CACHEDEV [CACHEDEV ...]]
+to delete an *UNUSED* group:
+
+    fcg-easy delete [-h] [-g GROUP]
+

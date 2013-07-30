@@ -93,6 +93,12 @@ def _get_table(name):
         return None
 
 def _create_flashcache(cacheName, cacheDevice, groupDevice):
+    cmd = 'flashcache_destroy -f %s' % cacheDevice
+    try:
+        _os_execute(cmd)
+    except Exception, ErrMsg:
+        pass
+
     cacheSize = _sectors2MB(_get_dev_sector_count(cacheDevice))
     cmd = 'flashcache_create -p back -b 4k -s %s %s %s %s' % (cacheSize, cacheName, cacheDevice, groupDevice)
     try:
