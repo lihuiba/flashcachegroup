@@ -3,11 +3,24 @@ import sys, os, commands, tempfile, argparse
 
 def parse_args(cmdline):
     parser = argparse.ArgumentParser(description='This is a description of %(prog)s', epilog='This is a epilog of %(prog)s', prefix_chars='-+', fromfile_prefix_chars='@', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-g', '--group', type=str)
-    parser.add_argument('-d', '--disk', nargs='+', type=str)
-    parser.add_argument('-c', '--cachedev', nargs='+', type=str)
+
+    subparsers  = parser.add_subparsers(help='sub-command help')
+
+    create_parser = subparsers.add_parser('create', help='fcg-easy create -h')
+    create_parser.add_argument('-g', '--group', type=str)
+    create_parser.add_argument('-d', '--disk', nargs='+', type=str)
+    create_parser.add_argument('-c', '--cachedev', nargs='+', type=str)
+    create_parser.set_defaults(func=main_create)
+
+    delete_parser = subparsers.add_parser('delete', help='fcg-easy delete -h')
+    delete_parser.add_argument('-g', '--group', type=str)
+    delete_parser.add_argument('-f', '--force', action='store_true')
+    delete_parser.set_defaults(func=main_delete)
+
     args = parser.parse_args(cmdline)
-    return args.group, args.disk, args.cachedev
+    if args.group == None:
+        parser.print_help()
+    args.func(args)
 
 def _os_execute(cmd):
     ret, output = commands.getstatusoutput(cmd)
@@ -70,6 +83,16 @@ def _delete_table(name):
         print ErrMsg
         return False
 
+def _get_table(name):
+    cmd = 'dmsetup table %s' % name
+    try:
+        table = _os_execute(cmd)
+        return table
+    except Exception, ErrMsg:
+        print cmd + ': ',
+        print ErrMsg
+        return None
+
 def _create_flashcache(cacheName, cacheDevice, groupDevice):
     cacheSize = _sectors2MB(_get_dev_sector_count(cacheDevice))
     cmd = 'flashcache_create -p back -b 4k -s %s %s %s %s' % (cacheSize, cacheName, cacheDevice, groupDevice)
@@ -94,6 +117,11 @@ def _delete_flashcache(cacheName, cacheDevice):
         print ErrMsg
         return False
 
+def _get_cache_ssd_dev(cacheName):
+        cmd = "dmsetup table %s|grep ssd|grep dev|awk '{print $3}'" % cacheName
+        ssd_dev = _os_execute(cmd)[1:-2]
+        return ssd_dev
+
 def _get_device_name(device):
     name = device.split('/')[-1:][0]
     return name
@@ -111,6 +139,33 @@ def _cached_tables(devices, cacheGroupDevice):
         startSector += sector
     assert len(names) == len(tables), 'Something BAD happened when try to get cached tables...'
     return names, tables
+
+def _get_devname_from_major_minor(majorMinor):
+    cmd = "ls -l /dev/block|awk '{print $9, $11}'|grep %s" % majorMinor
+    _, deviceName = _os_execute(cmd).split()
+    deviceName = deviceName.split('/')[-1:][0]
+    if majorMinor.split(':')[0] == '253':
+        cmd = "ls -l /dev/mapper|awk '{if ($11 != \"\") print $11, $9}'|grep %s"% deviceName
+        _, deviceName = _os_execute(cmd).split()
+        return '/dev/mapper/%s' % deviceName   
+    else:
+        return '/dev/%s' % deviceName
+
+def _is_device_busy(device):
+    cmd = 'fuser %s' % device
+    try:
+        output = _os_execute(cmd)
+        if output == '':
+            return False
+        else:
+            return True
+    except Exception, e:
+        return False
+
+def main_create(args):
+    if args.group == None or args.disk == None or args.cachedev == None:
+        return
+    create_group(args.group, args.disk, args.cachedev)
 
 def create_group(groupName, hddDevs, cacheDevs):
     #create linear device group
@@ -160,8 +215,58 @@ def create_group(groupName, hddDevs, cacheDevs):
             _delete_table(groupName)
             _delete_table(cacheDevName)
             return
-        
+
+def main_delete(args):
+    if args.group == None:
+        return
+    delete_group(args.group, args.force)
+
+def delete_group(groupName, force):
+    groupTable = _get_table(groupName)
+    if groupTable == None:
+        print "Group %s dose NOT exist..." % groupName
+        return
+    hddDevices = []
+    hddNames = []
+    cachedDevices = []
+    for line in groupTable.split('\n'):
+        if line == '':
+            continue
+        line = line.split()
+        while '' in line:
+            line.remove('')
+        if len(line) == 5:
+            hddDevice = line[3]
+            try:
+                major, minor = [int(x) for x in hddDevice.split(':')]
+                hddDevice = _get_devname_from_major_minor(hddDevice)
+            except Exception, e:
+                pass
+            hddDevices.append(hddDevice)
+            hddName = hddDevice.split('/')[-1:][0]
+            hddNames.append(hddName)
+            cachedDevices.append('cached-' + hddName)
+
+    isbusy = False
+    busyDev = ''
+    for cachedDev in cachedDevices:
+        if _is_device_busy('/dev/mapper/' + cachedDev):
+            isbusy = True
+            busyDev = cachedDev
+            break
+    if isbusy and force == False:
+        print "Delete group %s failed, %s is busy..." % (groupName, busyDev)
+        return
+
+    cacheName = 'cachegroup-%s' % groupName
+    ssd = _get_cache_ssd_dev(cacheName)
+    for cachedDev in cachedDevices:
+        _delete_table(cachedDev)
+    _delete_flashcache(cacheName, ssd)
+    _delete_table(groupName)
+    _delete_table(ssd)
+            
+    
 if __name__ == '__main__':
-    groupName, hddDevs, cacheDevs = parse_args(sys.argv[1:])
-    #create_group(groupName, hddDevs, cacheDevs)
+    parse_args(sys.argv[1:])
 
