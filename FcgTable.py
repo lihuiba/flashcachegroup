@@ -73,7 +73,8 @@ class FcgTable:
                     self.existed = True
                     return True
                 except Exception, ErrMsg:
-                    print cmd + ': ' + ErrMsg
+                    print cmd + ': ',
+                    print ErrMsg
                     self.delete()
                     return False
 
@@ -85,7 +86,8 @@ class FcgTable:
                 self.existed = False
                 return True
             except Exception, ErrMsg:
-                print cmd + ': ' + ErrMsg
+                print cmd + ': ',
+                print ErrMsg
                 return False
         else:
             print 'Table %s does NOT existed...' % self.name
@@ -97,19 +99,22 @@ class FcgTable:
         try:
             FcgUtils.os_execute(cmd)
         except Exception, ErrMsg:
-            print cmd + ': ' + ErrMsg
+            print cmd + ': ',
+            print ErrMsg
         tableContent = self._get_table_content()
         tmpTableFile = FcgUtils.write2tempfile(tableContent)
         cmd = 'dmsetup reload %s %s' % (self.name, tmpTableFile)
         try:
             FcgUtils.os_execute(cmd)
         except Exception, ErrMsg:
-            print cmd + ': ' + ErrMsg
+            print cmd + ': ',
+            print ErrMsg
         cmd = 'dmsetup resume %s'%self.name
         try:
             FcgUtils.os_execute(cmd)
         except:
-            print cmd + ': ' + ErrMsg
+            print cmd + ': ',
+            print ErrMsg
 
     def is_existed(self):
         return self.existed

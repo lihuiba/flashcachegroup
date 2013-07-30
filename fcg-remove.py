@@ -2,6 +2,7 @@
 import sys, getopt
 import FcgUtils
 from FcgTable import FcgTable
+from FcgCache import FcgCacheGroup
 
 def parse_args(cmdline):
     try:
@@ -38,9 +39,10 @@ def remove_hdd(groupName, hddDev):
     #invalid cache blocks
     cacheGroupName = 'cache_%s' % groupName
     cacheGroupDev = '/dev/mapper/%s' % cacheGroupName
-    cacheBlkSize = FcgUtils.get_cache_blksize(cacheGroupName)
+    cacheGroup = FcgCacheGroup(cacheGroupName)
+    cacheBlkSize = cacheGroup.get_cache_blksize()
     startBlk, offsetBlk = FcgUtils.sector_offset2block_offset(cacheLine['oriStartSec'], cacheLine['offset'], cacheBlkSize)
-    FcgUtils.invalid_cache_blocks(cacheGroupDev, startBlk, offsetBlk)
+    cacheGroup.invalid_cache_blocks(cacheGroupDev, startBlk, offsetBlk)
     
     for i in range(len(groupTable.lines)):
         groupLine = groupTable.lines[i]
@@ -48,10 +50,9 @@ def remove_hdd(groupName, hddDev):
             if groupLine['offset'] == cacheLine['offset'] and groupLine['oriDev'] == hddDev:
                 groupTable.lines[i] = {'startSec':groupLine['startSec'], 'offset':groupLine['offset'], 'type':'error'}
                 break
-    groupTable.adjust_lines()
+    groupTable.reload()
     freeTable = FcgTable('free_'+groupName)
     freeTable.lines = FcgUtils.get_free_table_from_group(groupTable.lines, cacheGroupDev)
-    groupTable.reload()
     freeTable.reload()
 
 if __name__ == '__main__':

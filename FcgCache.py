@@ -35,7 +35,7 @@ class FcgCacheGroup(FcgTable):
         blkSize = tmpSizeStr[tmpSizeStr.find('(')+1: tmpSizeStr.find(')')]
         return blkSize
 
-    def invalid_cache_blocks(cacheGroupDev, startBlk, offsetBlk):
+    def invalid_cache_blocks(self, cacheGroupDev, startBlk, offsetBlk):
         cmd = 'flashcache_invalidate /dev/mapper/%s %s %s' % (self.name, startBlk, offsetBlk)
         FcgUtils.os_execute(cmd)
         

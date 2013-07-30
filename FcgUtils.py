@@ -49,7 +49,7 @@ def write2tempfile(content):
 def get_devname_from_major_minor(majorMinor):
     # try os.readlink('/dev/block/<major>:<minor>')
     cmd = "ls -l /dev/block|awk '{print $9, $11}'|grep %s" % majorMinor
-    _, deviceName = os_execue(cmd).split()
+    _, deviceName = os_execute(cmd).split()
     deviceName = deviceName.split('/')[-1:][0]
     if majorMinor.split(':')[0] == '253':
         cmd = "ls -l /dev/mapper|awk '{if ($11 != \"\") print $11, $9}'|grep %s"% deviceName
