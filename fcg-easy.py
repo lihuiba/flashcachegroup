@@ -17,8 +17,6 @@ def parse_args(cmdline):
     delete_parser.set_defaults(func=main_delete)
 
     args = parser.parse_args(cmdline)
-    if args.group == None:
-        parser.print_help()
     args.func(args)
 
 def _os_execute(cmd):
@@ -59,12 +57,15 @@ def _write2tempfile(content):
     temp = tempfile.NamedTemporaryFile(delete=False)
     temp.write(content)
     temp.close()
+    print 'Write table to temporary file %s, content is:' % temp.name
+    print content
     return temp.name
 
 def _create_table(name, table):
     tmpTableFile = _write2tempfile(table)
     cmd = 'dmsetup create %s %s' % (name, tmpTableFile)
     try:
+        print 'Execute command: %s' % cmd
         _os_execute(cmd)
         return True
     except Exception, ErrMsg:
@@ -75,6 +76,7 @@ def _create_table(name, table):
 def _delete_table(name):
     cmd = 'dmsetup remove %s' % name
     try:
+        print 'Execute command: %s' % cmd
         _os_execute(cmd)
         return True
     except Exception, ErrMsg:
@@ -102,6 +104,7 @@ def _create_flashcache(cacheName, cacheDevice, groupDevice):
     cacheSize = _sectors2MB(_get_dev_sector_count(cacheDevice))
     cmd = 'flashcache_create -p back -b 4k -s %s %s %s %s' % (cacheSize, cacheName, cacheDevice, groupDevice)
     try:
+        print 'Execute command: %s' % cmd
         _os_execute(cmd)
         return True
     except Exception, ErrMsg:
@@ -115,6 +118,7 @@ def _delete_flashcache(cacheName, cacheDevice):
         return False
     cmd = 'flashcache_destroy -f %s' % cacheDevice
     try:
+        print 'Execute command: %s' % cmd
         _os_execute(cmd)
         return True
     except Exception, ErrMsg:
@@ -146,15 +150,7 @@ def _cached_tables(devices, cacheGroupDevice):
     return names, tables
 
 def _get_devname_from_major_minor(majorMinor):
-    cmd = "ls -l /dev/block|awk '{print $9, $11}'|grep %s" % majorMinor
-    _, deviceName = _os_execute(cmd).split()
-    deviceName = deviceName.split('/')[-1:][0]
-    if majorMinor.split(':')[0] == '253':
-        cmd = "ls -l /dev/mapper|awk '{if ($11 != \"\") print $11, $9}'|grep %s"% deviceName
-        _, deviceName = _os_execute(cmd).split()
-        return '/dev/mapper/%s' % deviceName   
-    else:
-        return '/dev/%s' % deviceName
+    return '/dev/' + os.readlink('/dev/block/%s' % majorMinor)[3:]
 
 def _is_device_busy(device):
     cmd = 'fuser %s' % device
@@ -274,4 +270,3 @@ def delete_group(groupName):
     
 if __name__ == '__main__':
     parse_args(sys.argv[1:])
-

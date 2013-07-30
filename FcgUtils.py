@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import commands, tempfile
+import commands, tempfile, os
 
 def bytes_str2bytes_count(bytes):
     #take M as default
@@ -33,6 +33,7 @@ def sectors2MB(sectors):
     return str(sectors*512/1024/1024) + 'M'
 
 def os_execute(cmd):
+    print 'Execute command %s' % cmd
     ret, output = commands.getstatusoutput(cmd)
     if ret == '0' or ret == 0:
         return output
@@ -47,16 +48,7 @@ def write2tempfile(content):
 
 
 def get_devname_from_major_minor(majorMinor):
-    # try os.readlink('/dev/block/<major>:<minor>')
-    cmd = "ls -l /dev/block|awk '{print $9, $11}'|grep %s" % majorMinor
-    _, deviceName = os_execute(cmd).split()
-    deviceName = deviceName.split('/')[-1:][0]
-    if majorMinor.split(':')[0] == '253':
-        cmd = "ls -l /dev/mapper|awk '{if ($11 != \"\") print $11, $9}'|grep %s"% deviceName
-        _, deviceName = os_execute(cmd).split()
-        return '/dev/mapper/%s' % deviceName   
-    else:
-        return '/dev/%s' % deviceName
+    return '/dev/' + os.readlink('/dev/block/%s' % majorMinor)[3:]
 
 def get_dev_sector_count(dev):
     # try /dev/block/xxx/size
