@@ -14,7 +14,6 @@ def parse_args(cmdline):
 
     delete_parser = subparsers.add_parser('delete', help='fcg-easy delete -h')
     delete_parser.add_argument('-g', '--group', type=str)
-    delete_parser.add_argument('-f', '--force', action='store_true')
     delete_parser.set_defaults(func=main_delete)
 
     args = parser.parse_args(cmdline)
@@ -219,9 +218,9 @@ def create_group(groupName, hddDevs, cacheDevs):
 def main_delete(args):
     if args.group == None:
         return
-    delete_group(args.group, args.force)
+    delete_group(args.group)
 
-def delete_group(groupName, force):
+def delete_group(groupName):
     groupTable = _get_table(groupName)
     if groupTable == None:
         print "Group %s dose NOT exist..." % groupName
@@ -254,7 +253,7 @@ def delete_group(groupName, force):
             isbusy = True
             busyDev = cachedDev
             break
-    if isbusy and force == False:
+    if isbusy:
         print "Delete group %s failed, %s is busy..." % (groupName, busyDev)
         return
 
