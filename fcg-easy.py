@@ -326,7 +326,7 @@ def delete_group(groupName, isYes):
 
     cacheName = 'cachegroup-%s' % groupName
     ssd = _get_cache_ssd_dev(cacheName)
-    for cachedDev in cachedDevices:
+    for cachedDev in cachedNames:
         try:
             _delete_table(cachedDev, isYes)
         except Exception, e:
