@@ -16,6 +16,11 @@ def parse_args(cmdline):
     delete_parser.add_argument('-g', '--group', type=str)
     delete_parser.set_defaults(func=main_delete)
 
+    rep_ssd_parser = subparsers.add_parser('rep-ssd', help='fcg-easy rep-ssd -h')
+    rep_ssd_parser.add_argument('-g', '--group', type=str)
+    rep_ssd_parser.add_argument('-c', '--cachedev', nargs='+', type=str)
+    rep_ssd_parser.set_defaults(func=main_rep_ssd)
+
     args = parser.parse_args(cmdline)
     args.func(args)
 
@@ -94,11 +99,42 @@ def _get_table(name):
         print ErrMsg
         return None
 
+def _rename_table(oldName, newName):
+    cmd = 'dmsetup rename %s %s' % (oldName, newName)
+    try:
+        _os_execute(cmd)
+        return True
+    except Exception, ErrMsg:
+        print cmd + ': ', ErrMsg
+        return False
+
+def _reload_table(name, table):
+    cmd = 'dmsetup suspend %s'%name
+    try:
+        _os_execute(cmd)
+    except Exception, ErrMsg:
+        print cmd + ': ',
+        print ErrMsg
+    tmpTableFile = _write2tempfile(table)
+    cmd = 'dmsetup reload %s %s' % (name, tmpTableFile)
+    try:
+        _os_execute(cmd)
+    except Exception, ErrMsg:
+        print cmd + ': ',
+        print ErrMsg
+    cmd = 'dmsetup resume %s'%name
+    try:
+        _os_execute(cmd)
+    except Exception, ErrMsg:
+        print cmd + ': ',
+        print ErrMsg
+
 def _create_flashcache(cacheName, cacheDevice, groupDevice):
     cmd = 'flashcache_destroy -f %s' % cacheDevice
     try:
         _os_execute(cmd)
     except Exception, ErrMsg:
+        print ErrMsg
         pass
 
     cacheSize = _sectors2MB(_get_dev_sector_count(cacheDevice))
@@ -162,6 +198,32 @@ def _is_device_busy(device):
             return True
     except Exception, e:
         return False
+
+def _get_hdd_devices(groupName):
+    groupTable = _get_table(groupName)
+    if groupTable == None:
+        print "Group %s dose NOT exist..." % groupName
+        return
+    hddDevices = []
+    for line in groupTable.split('\n'):
+        if line == '':
+            continue
+        line = line.split()
+        while '' in line:
+            line.remove('')
+        if len(line) == 5:
+            hddDevice = line[3]
+            try:
+                major, minor = [int(x) for x in hddDevice.split(':')]
+                hddDevice = _get_devname_from_major_minor(hddDevice)
+            except Exception, e:
+                pass
+            hddDevices.append(hddDevice)
+    return hddDevices
+
+def _get_cached_names(hddDevs):
+    cachedNames = [ 'cached-' + _get_device_name(hdd) for hdd in hddDevs]
+    return cachedNames
 
 def main_create(args):
     if args.group == None or args.disk == None or args.cachedev == None:
@@ -266,7 +328,41 @@ def delete_group(groupName):
     _delete_flashcache(cacheName, ssd)
     _delete_table(groupName)
     _delete_table(ssd)
-            
+
+def main_rep_ssd(args):
+    if args.group == None or args.cachedev == None:
+        return
+    rep_ssd(args.group, args.cachedev)
+
+def rep_ssd(groupName, cacheDevs):
+    groupDevice = '/dev/mapper/%s' % groupName
+    hddDevs = _get_hdd_devices(groupName)
+    #cachedHddNames = _get_cached_names(hddDevs)
+    cacheName = 'cachegroup-%s' % groupName
+
+    oldSsd = _get_cache_ssd_dev(cacheName)
+    trashCacheName = cacheName+'-old'
+    _rename_table(cacheName, trashCacheName)
+    cacheDevName = 'cachedevices-%s' % groupName
+    trashCacheDevName = cacheDevName + '-old'
+    _rename_table(cacheDevName, trashCacheDevName)
+    
+    cacheDevTable = ''
+    try:
+        cacheDevTable = _linear_map_table(cacheDevs)
+    except Exception, e:
+        print e
+        return
+    _create_table(cacheDevName, cacheDevTable)
+    cacheDevice = '/dev/mapper/%s' % cacheDevName
+    _create_flashcache(cacheName, cacheDevice, groupDevice)
+
+    cacheGroupDevice = '/dev/mapper/%s' % cacheName
+    cachedNames, cachedTables = _cached_tables(hddDevs, cacheGroupDevice)
+    for i in range(len(cachedNames)):
+        _reload_table(cachedNames[i], cachedTables[i])
+    _delete_flashcache(trashCacheName, oldSsd)
+    _delete_table(trashCacheDevName)
     
 if __name__ == '__main__':
     parse_args(sys.argv[1:])
