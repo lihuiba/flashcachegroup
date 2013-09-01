@@ -155,8 +155,7 @@ def _create_flashcache(cacheName, cacheDevice, groupDevice, isYes):
     cmd = 'flashcache_destroy -f %s' % cacheDevice
     try:
         _os_execute(cmd)
-    except Exception, ErrMsg:
-        print ErrMsg
+    except :
         pass
 
     cacheSize = _sectors2MB(_get_dev_sector_count(cacheDevice))
@@ -288,14 +287,14 @@ def create_group(groupName, hddDevs, cacheDevs, isYes):
     cachedNames, cachedTables = _cached_tables(hddDevs, cacheGroupDevice)
     for i in range(len(cachedNames)):
         try:
-            _create_table(cachedNames[i], cachedTables[i])
+            _create_table(cachedNames[i], cachedTables[i], isYes)
         except:
             print 'Try to roll back...'
             for j in range(i):
-                _delete_table(cachedNames[j])
-            _delete_flashcache(cacheName, cacheDevice)
-            _delete_table(groupName)
-            _delete_table(cacheDevName)
+                _delete_table(cachedNames[j], True)
+            _delete_flashcache(cacheName, cacheDevice, True)
+            _delete_table(groupName, True)
+            _delete_table(cacheDevName, True)
             return
 
 def main_delete(args):
