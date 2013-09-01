@@ -10,19 +10,34 @@ def parse_args(cmdline):
     create_parser.add_argument('-g', '--group', type=str)
     create_parser.add_argument('-d', '--disk', nargs='+', type=str)
     create_parser.add_argument('-c', '--cachedev', nargs='+', type=str)
+    create_parser.add_argument('-y', '--yes', action='store_true', default=False)
     create_parser.set_defaults(func=main_create)
 
     delete_parser = subparsers.add_parser('delete', help='fcg-easy delete -h')
     delete_parser.add_argument('-g', '--group', type=str)
+    delete_parser.add_argument('-y', '--yes', action='store_true', default=False)
     delete_parser.set_defaults(func=main_delete)
 
     rep_ssd_parser = subparsers.add_parser('rep-ssd', help='fcg-easy rep-ssd -h')
     rep_ssd_parser.add_argument('-g', '--group', type=str)
     rep_ssd_parser.add_argument('-c', '--cachedev', nargs='+', type=str)
+    rep_ssd_parser.add_argument('-y', '--yes', action='store_true', default=False)
     rep_ssd_parser.set_defaults(func=main_rep_ssd)
 
     args = parser.parse_args(cmdline)
     args.func(args)
+
+def _ask_user():
+    print 'Continue to execute? (yes/no):'
+    while(True):
+        userInput = raw_input()
+        if userInput in ('y', 'Y', 'yes', 'Yes', 'YES'):
+            return True
+        elif userInput in ('n', 'N', 'no', 'No', 'NO'):
+            return False
+        else:
+            print 'Please input yes or no...'
+            continue
 
 def _os_execute(cmd):
     ret, output = commands.getstatusoutput(cmd)
@@ -30,6 +45,18 @@ def _os_execute(cmd):
         return output
     else:
         raise Exception(output)
+
+def _ask_to_execute(cmd):
+    if _ask_user() == True:
+        _os_execute(cmd)
+    else:
+        raise 'User Interrupted'
+
+def _execute(cmd, isYes):
+    if isYes:
+        _os_execute(cmd)
+    else:
+        _ask_to_execute(cmd)
 
 def _get_dev_sector_count(dev):
     # try /dev/block/xxx/size
@@ -62,32 +89,22 @@ def _write2tempfile(content):
     temp = tempfile.NamedTemporaryFile(delete=False)
     temp.write(content)
     temp.close()
-    print 'Write table to temporary file %s, content is:' % temp.name
-    print content
+    #print 'Write table to temporary file %s, content is:' % temp.name
+    #print content
     return temp.name
 
-def _create_table(name, table):
+def _create_table(name, table, isYes):
     tmpTableFile = _write2tempfile(table)
     cmd = 'dmsetup create %s %s' % (name, tmpTableFile)
-    try:
-        print 'Execute command: %s' % cmd
-        _os_execute(cmd)
-        return True
-    except Exception, ErrMsg:
-        print cmd + ': ',
-        print ErrMsg
-        return False
+    print 'Create table: %s' % cmd
+    print 'Table content is:'
+    print table,
+    _execute(cmd, isYes)
 
-def _delete_table(name):
+def _delete_table(name, isYes):
     cmd = 'dmsetup remove %s' % name
-    try:
-        print 'Execute command: %s' % cmd
-        _os_execute(cmd)
-        return True
-    except Exception, ErrMsg:
-        print cmd + ': ',
-        print ErrMsg
-        return False
+    print 'Delete table: %s' % cmd
+    _execute(cmd, isYes)
 
 def _get_table(name):
     cmd = 'dmsetup table %s' % name
@@ -109,6 +126,11 @@ def _rename_table(oldName, newName):
         return False
 
 def _reload_table(name, table):
+    print 'Reload table %s' % name
+    print 'New table content is: \n', table
+    if _ask_user() == False:
+        raise "User Interrupted"
+
     cmd = 'dmsetup suspend %s'%name
     try:
         _os_execute(cmd)
@@ -129,7 +151,7 @@ def _reload_table(name, table):
         print cmd + ': ',
         print ErrMsg
 
-def _create_flashcache(cacheName, cacheDevice, groupDevice):
+def _create_flashcache(cacheName, cacheDevice, groupDevice, isYes):
     cmd = 'flashcache_destroy -f %s' % cacheDevice
     try:
         _os_execute(cmd)
@@ -139,28 +161,17 @@ def _create_flashcache(cacheName, cacheDevice, groupDevice):
 
     cacheSize = _sectors2MB(_get_dev_sector_count(cacheDevice))
     cmd = 'flashcache_create -p back -b 4k -s %s %s %s %s' % (cacheSize, cacheName, cacheDevice, groupDevice)
-    try:
-        print 'Execute command: %s' % cmd
-        _os_execute(cmd)
-        return True
-    except Exception, ErrMsg:
-        print cmd + ': ',
-        print ErrMsg
-        return False
+    print 'Create flashcache: %s' % cmd
+    _execute(cmd, isYes)
 
-def _delete_flashcache(cacheName, cacheDevice):
-    ret = _delete_table(cacheName)
+def _delete_flashcache(cacheName, cacheDevice, isYes):
+    print 'Delete flashcache'
+    ret = _delete_table(cacheName, isYes)
     if ret == False:
         return False
     cmd = 'flashcache_destroy -f %s' % cacheDevice
-    try:
-        print 'Execute command: %s' % cmd
-        _os_execute(cmd)
-        return True
-    except Exception, ErrMsg:
-        print cmd + ': ',
-        print ErrMsg
-        return False
+    print 'Execute command: %s' % cmd
+    _execute(cmd, isYes)
 
 def _get_cache_ssd_dev(cacheName):
         cmd = "dmsetup table %s|grep ssd|grep dev|awk '{print $3}'" % cacheName
@@ -228,9 +239,9 @@ def _get_cached_names(hddDevs):
 def main_create(args):
     if args.group == None or args.disk == None or args.cachedev == None:
         return
-    create_group(args.group, args.disk, args.cachedev)
+    create_group(args.group, args.disk, args.cachedev, args.yes)
 
-def create_group(groupName, hddDevs, cacheDevs):
+def create_group(groupName, hddDevs, cacheDevs, isYes):
     #create linear device group
     groupTable = ''
     try:
@@ -248,30 +259,38 @@ def create_group(groupName, hddDevs, cacheDevs):
 
     cacheDevName = 'cachedevices-%s' % groupName
 
-    ret =  _create_table(groupName, groupTable)
-    if ret == False:
+    try:
+        _create_table(groupName, groupTable, isYes)
+    except Exception, e:
+        print e
         return
-    ret = _create_table(cacheDevName, cacheDevTable)
-    if ret == False:
-        _delete_table(groupName)
+    try:
+        _create_table(cacheDevName, cacheDevTable, isYes)
+    except:
+        print 'Try to roll back...'
+        _delete_table(groupName, True)
         return
 
     #create flashcache
     groupDevice = '/dev/mapper/%s' % groupName
     cacheDevice = '/dev/mapper/%s' % cacheDevName
     cacheName = 'cachegroup-%s' % groupName
-    ret = _create_flashcache(cacheName, cacheDevice, groupDevice)
-    if ret == False:
-        _delete_table(groupName)
-        _delete_table(cacheDevName)
+    try:
+        _create_flashcache(cacheName, cacheDevice, groupDevice, isYes)
+    except:
+        print 'Try to roll back...'
+        _delete_table(groupName, True)
+        _delete_table(cacheDevName, True)
         return
 
     #create cached devices
     cacheGroupDevice = '/dev/mapper/%s' % cacheName
     cachedNames, cachedTables = _cached_tables(hddDevs, cacheGroupDevice)
     for i in range(len(cachedNames)):
-        ret = _create_table(cachedNames[i], cachedTables[i])
-        if ret == False:
+        try:
+            _create_table(cachedNames[i], cachedTables[i])
+        except:
+            print 'Try to roll back...'
             for j in range(i):
                 _delete_table(cachedNames[j])
             _delete_flashcache(cacheName, cacheDevice)
