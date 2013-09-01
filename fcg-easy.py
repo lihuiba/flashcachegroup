@@ -300,37 +300,22 @@ def create_group(groupName, hddDevs, cacheDevs, isYes):
 def main_delete(args):
     if args.group == None:
         return
-    delete_group(args.group)
+    delete_group(args.group, args.yes)
 
-def delete_group(groupName):
+def delete_group(groupName, isYes):
     groupTable = _get_table(groupName)
     if groupTable == None:
         print "Group %s dose NOT exist..." % groupName
         return
     hddDevices = []
     hddNames = []
-    cachedDevices = []
-    for line in groupTable.split('\n'):
-        if line == '':
-            continue
-        line = line.split()
-        while '' in line:
-            line.remove('')
-        if len(line) == 5:
-            hddDevice = line[3]
-            try:
-                major, minor = [int(x) for x in hddDevice.split(':')]
-                hddDevice = _get_devname_from_major_minor(hddDevice)
-            except Exception, e:
-                pass
-            hddDevices.append(hddDevice)
-            hddName = hddDevice.split('/')[-1:][0]
-            hddNames.append(hddName)
-            cachedDevices.append('cached-' + hddName)
+    cachedNames = []
+    hddDevices = _get_hdd_devices(groupName)
+    cachedNames = _get_cached_names(hddDevices)
 
     isbusy = False
     busyDev = ''
-    for cachedDev in cachedDevices:
+    for cachedDev in cachedNames:
         if _is_device_busy('/dev/mapper/' + cachedDev):
             isbusy = True
             busyDev = cachedDev
@@ -342,10 +327,13 @@ def delete_group(groupName):
     cacheName = 'cachegroup-%s' % groupName
     ssd = _get_cache_ssd_dev(cacheName)
     for cachedDev in cachedDevices:
-        _delete_table(cachedDev)
-    _delete_flashcache(cacheName, ssd)
-    _delete_table(groupName)
-    _delete_table(ssd)
+        try:
+            _delete_table(cachedDev, isYes)
+        except Exception, e:
+            print e
+    _delete_flashcache(cacheName, ssd, isYes)
+    _delete_table(groupName, isYes)
+    _delete_table(ssd, isYes)
 
 def main_rep_ssd(args):
     if args.group == None or args.cachedev == None:
