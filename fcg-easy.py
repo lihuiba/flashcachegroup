@@ -329,6 +329,7 @@ def delete_group(groupName, isYes):
 
     cacheName = 'cachegroup-%s' % groupName
     ssd = _get_cache_ssd_dev(cacheName)
+
     for i in range(len(cachedNames)):
         cachedDev = cachedNames[i]
         try:
