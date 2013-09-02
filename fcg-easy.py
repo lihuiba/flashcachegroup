@@ -265,7 +265,8 @@ def create_group(groupName, hddDevs, cacheDevs, isYes):
         return
     try:
         _create_table(cacheDevName, cacheDevTable, isYes)
-    except:
+    except Exception, e:
+        print e
         print 'Try to roll back...'
         _delete_table(groupName, True)
         return
@@ -276,7 +277,8 @@ def create_group(groupName, hddDevs, cacheDevs, isYes):
     cacheName = 'cachegroup-%s' % groupName
     try:
         _create_flashcache(cacheName, cacheDevice, groupDevice, isYes)
-    except:
+    except Exception, e:
+        print e
         print 'Try to roll back...'
         _delete_table(groupName, True)
         _delete_table(cacheDevName, True)
@@ -288,7 +290,8 @@ def create_group(groupName, hddDevs, cacheDevs, isYes):
     for i in range(len(cachedNames)):
         try:
             _create_table(cachedNames[i], cachedTables[i], isYes)
-        except:
+        except Exception, e:
+            print e
             print 'Try to roll back...'
             for j in range(i):
                 _delete_table(cachedNames[j], True)
@@ -326,14 +329,22 @@ def delete_group(groupName, isYes):
 
     cacheName = 'cachegroup-%s' % groupName
     ssd = _get_cache_ssd_dev(cacheName)
-    for cachedDev in cachedDevices:
+    for i in range(len(cachedNames)):
+        cachedDev = cachedNames[i]
         try:
             _delete_table(cachedDev, isYes)
         except Exception, e:
             print e
-    _delete_flashcache(cacheName, ssd, isYes)
-    _delete_table(groupName, isYes)
-    _delete_table(ssd, isYes)
+            print 'Try to roll back...'
+            cacheGroupDevice = '/dev/mapper/%s' % cacheName
+            names, tables = _cached_tables(hddDevices, cacheGroupDevice)
+            for j in range(i):
+                _create_table(names[j], tables[j], True)
+            return
+            
+    _delete_flashcache(cacheName, ssd, True)
+    _delete_table(groupName, True)
+    _delete_table(ssd, True)
 
 def main_rep_ssd(args):
     if args.group == None or args.cachedev == None:
@@ -343,7 +354,6 @@ def main_rep_ssd(args):
 def rep_ssd(groupName, cacheDevs):
     groupDevice = '/dev/mapper/%s' % groupName
     hddDevs = _get_hdd_devices(groupName)
-    #cachedHddNames = _get_cached_names(hddDevs)
     cacheName = 'cachegroup-%s' % groupName
 
     oldSsd = _get_cache_ssd_dev(cacheName)
