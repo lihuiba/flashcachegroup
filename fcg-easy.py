@@ -21,7 +21,6 @@ def parse_args(cmdline):
     rep_ssd_parser = subparsers.add_parser('rep-ssd', help='fcg-easy rep-ssd -h')
     rep_ssd_parser.add_argument('-g', '--group', type=str)
     rep_ssd_parser.add_argument('-c', '--cachedev', nargs='+', type=str)
-    rep_ssd_parser.add_argument('-y', '--yes', action='store_true', default=False)
     rep_ssd_parser.set_defaults(func=main_rep_ssd)
 
     args = parser.parse_args(cmdline)
@@ -370,16 +369,16 @@ def rep_ssd(groupName, cacheDevs):
     except Exception, e:
         print e
         return
-    _create_table(cacheDevName, cacheDevTable)
+    _create_table(cacheDevName, cacheDevTable, True)
     cacheDevice = '/dev/mapper/%s' % cacheDevName
-    _create_flashcache(cacheName, cacheDevice, groupDevice)
+    _create_flashcache(cacheName, cacheDevice, groupDevice, True)
 
     cacheGroupDevice = '/dev/mapper/%s' % cacheName
-    cachedNames, cachedTables = _cached_tables(hddDevs, cacheGroupDevice)
+    cachedNames, cachedTables = _cached_tables(hddDevs, cacheGroupDevice, True)
     for i in range(len(cachedNames)):
         _reload_table(cachedNames[i], cachedTables[i])
-    _delete_flashcache(trashCacheName, oldSsd)
-    _delete_table(trashCacheDevName)
+    _delete_flashcache(trashCacheName, oldSsd, True)
+    _delete_table(trashCacheDevName, True)
     
 if __name__ == '__main__':
     parse_args(sys.argv[1:])
