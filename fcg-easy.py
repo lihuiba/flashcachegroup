@@ -126,9 +126,9 @@ def _rename_table(oldName, newName):
 
 def _reload_table(name, table):
     print 'Reload table %s' % name
-    print 'New table content is: \n', table
-    if _ask_user() == False:
-        raise "User Interrupted"
+    print 'New table content is: \n', table,
+    #if _ask_user() == False:
+    #    raise "User Interrupted"
 
     cmd = 'dmsetup suspend %s'%name
     try:
@@ -356,12 +356,12 @@ def rep_ssd(groupName, cacheDevs):
     hddDevs = _get_hdd_devices(groupName)
     cacheName = 'cachegroup-%s' % groupName
 
-    oldSsd = _get_cache_ssd_dev(cacheName)
     trashCacheName = cacheName+'-old'
     _rename_table(cacheName, trashCacheName)
     cacheDevName = 'cachedevices-%s' % groupName
     trashCacheDevName = cacheDevName + '-old'
     _rename_table(cacheDevName, trashCacheDevName)
+    oldSsd = '/dev/mapper/%s' % trashCacheDevName
     
     cacheDevTable = ''
     try:
@@ -374,7 +374,7 @@ def rep_ssd(groupName, cacheDevs):
     _create_flashcache(cacheName, cacheDevice, groupDevice, True)
 
     cacheGroupDevice = '/dev/mapper/%s' % cacheName
-    cachedNames, cachedTables = _cached_tables(hddDevs, cacheGroupDevice, True)
+    cachedNames, cachedTables = _cached_tables(hddDevs, cacheGroupDevice)
     for i in range(len(cachedNames)):
         _reload_table(cachedNames[i], cachedTables[i])
     _delete_flashcache(trashCacheName, oldSsd, True)
