@@ -2,7 +2,7 @@
 import sys, os, commands, tempfile, argparse
 
 def parse_args(cmdline):
-    parser = argparse.ArgumentParser(description='This is a description of %(prog)s', epilog='This is a epilog of %(prog)s', prefix_chars='-+', fromfile_prefix_chars='@', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(description='The %(prog)s is a program to create cache for a group of hard disks by using single or multiple ssds.', epilog='The path of devices should be absolute path', prefix_chars='-+', fromfile_prefix_chars='@', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     subparsers  = parser.add_subparsers(help='sub-command help')
 
