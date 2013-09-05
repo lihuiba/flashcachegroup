@@ -1,23 +1,6 @@
 #!/usr/bin/env python
-import sys, getopt, os
+import sys, os
 import FcgUtils
-from FcgTable import FcgTable
-
-def parse_args(cmdline):
-    try:
-        opts, args = getopt.getopt(cmdline, "g:h:", ["group=", "hdddev="])
-    except Exception, e:
-        sys.exit()
-    groupName = ''
-    hddDev = ''
-    for a, o in opts:
-        if a in ('-g', '--group'):
-            groupName = o
-        if a in ('-h', '--hdddev'):
-            hddDev = o
-    if groupName == '' or hddDev == '':
-        sys.exit()
-    return groupName, hddDev
 
 def add_hdd(groupName, hddDev):
     groupTable = FcgTable(groupName)
@@ -67,6 +50,3 @@ def add_hdd(groupName, hddDev):
     freeTable.reload()
     cacheTable.create()
 
-if __name__ == '__main__':
-    groupName, hddDev = parse_args(sys.argv[1:])
-    add_hdd(groupName, hddDev)

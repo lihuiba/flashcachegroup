@@ -1,24 +1,8 @@
 #!/usr/bin/env python
-import sys, getopt
+import sys
 import FcgUtils
 from FcgTable import FcgTable
 from FcgCache import FcgCacheGroup
-def parse_args(cmdline):
-    try:
-        opts, args = getopt.getopt(cmdline, "g:f", ["group=", "force"])
-    except:
-        sys.exit()
-
-    groupName = ''
-    force = False
-    for a, o in opts:
-        if a in ('-g', '--group'):
-            groupName = o
-        if a in ('-f', '--force'):
-            force = True
-    if groupName == '':
-        sys.exit()
-    return groupName, force
 
 def delete_group(groupName, force=False):
     groupTable = FcgTable(groupName)
@@ -54,7 +38,3 @@ def delete_group(groupName, force=False):
     except:
         pass
     groupTable.delete()
-    
-if __name__ == '__main__':
-    groupName, force = parse_args(sys.argv[1:])
-    delete_group(groupName, force)

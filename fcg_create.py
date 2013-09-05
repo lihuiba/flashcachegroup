@@ -1,24 +1,8 @@
 #!/usr/bin/env python
-import sys, getopt, os
+import sys, os
 import FcgUtils
 from FcgTable import FcgTable
 from FcgCache import FcgCacheGroup
-def parse_args(cmdline):
-    try:
-        opts, args = getopt.getopt(cmdline, "g:c:", ["group=", "cachedev="])
-    except Exception, e:
-        sys.exit()
-
-    groupName = ''
-    cacheDev = ''
-    for a, o in opts:
-        if a in ('-g', '--group'):
-            groupName = o
-        if a in ('-c', '--cachedev'):
-            cacheDev = o
-    if groupName == '' or cacheDev == '':
-        sys.exit()
-    return groupName, cacheDev
 
 def __create_group(groupName, cacheDev, hddSize, cacheSize):
     #create group table
@@ -66,8 +50,3 @@ def create_group(groupName, cacheDev):
         return 
     cacheSize = str(FcgUtils.sectors2MB(cacheSize))
     __create_group(groupName, cacheDev, hddSize, cacheSize)
-
-if __name__ == '__main__':
-    groupName, cacheDev = parse_args(sys.argv[1:])
-    create_group(groupName, cacheDev)
-
