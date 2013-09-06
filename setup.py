@@ -8,7 +8,7 @@ setup(
     name=NAME,
     version="0.2.4",
     description=DESCRIPTION,
-    long_description=open("README.md").read(),
+    long_description=open("README").read(),
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     license="GPL",
