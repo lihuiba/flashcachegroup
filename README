@@ -1,5 +1,5 @@
 flashcachegroup (fcg)
-===================
+================================
 
 making fb's flashcache to cache a group of disks with one or multiple SSDs.
 
@@ -8,10 +8,14 @@ apply caching on the group instead of each individual disk.
 
 
 Requirements
-====================
+============
+
+Python
+------
+Python 2.6 and 2.7 (does **NOT** support Python 3.x)
 
 Modules
---------
+-------
 * flashcache
 
 Install (Linux)
