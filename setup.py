@@ -14,6 +14,6 @@ setup(
     license="GPL",
     url=URL,
     packages=find_packages(),
-    scripts = ["fcg"],
+    scripts = ["bin/fcg"],
     keywords='flashcache group'
 )
