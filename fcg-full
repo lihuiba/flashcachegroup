@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+import argparse, sys
+from flashcachegroup import fcg_create, fcg_delete, fcg_add, fcg_remove
+def parse_args(cmdline):
+    parser = argparse.ArgumentParser(description='This is a description of %(prog)s', epilog='This is a epilog of %(prog)s', prefix_chars='-+', fromfile_prefix_chars='@', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    subparsers  = parser.add_subparsers(help='sub-command help')
+
+    create_parser = subparsers.add_parser('create', help='fcg create -h')
+    create_parser.add_argument('-g', '--group', type=str)
+    create_parser.add_argument('-c', '--cachedev', type=str)
+    create_parser.set_defaults(func=main_create)
+
+    delete_parser = subparsers.add_parser('delete', help='fcg delete -h')
+    delete_parser.add_argument('-g', '--group', type=str)
+    delete_parser.add_argument('-f', '--force', action='store_true', default=False)
+    delete_parser.set_defaults(func=main_delete)
+
+    add_parser = subparsers.add_parser('add', help='fcg add -h')
+    add_parser.add_argument('-g', '--group', type=str)
+    add_parser.add_argument('-d', '--disk', type=str)
+    add_parser.set_defaults(func=main_add)
+
+    remove_parser = subparsers.add_parser('remove', help='fcg remove -h')
+    remove_parser.add_argument('-g', '--group', type=str)
+    remove_parser.add_argument('-d', '--disk', type=str)
+    remove_parser.set_defaults(func=main_remove)
+
+    args = parser.parse_args(cmdline)
+    args.func(args)
+
+def main_create(args):
+    fcg-create_group(args.group, args.cachedev)
+
+def main_delete(args):
+    fcg-delete.delete_group(args.group, args.force)
+
+def main_add(args):
+    fcg-add.add_hdd(args.group, args.disk)
+
+def main_remove(args):
+    fcg-remove.remove_hdd(args.group, args.disk)
+
+if __name__ == '__main__':
+    parse_args(sys.argv[1:])
