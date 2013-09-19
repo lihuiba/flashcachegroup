@@ -1,10 +1,15 @@
 flashcachegroup (fcg)
 ===============
 
-making fb's flashcache to cache a group of disks with one or multiple SSDs.
+fcg makes fb's flashcache to cache a group of disks with one or multiple SSDs.
 
-Fcg allows admins to dynamically create groups of hard disks, and 
-apply caching on the group instead of each individual disk.
+Group of hard disk(s) can be dynamically created , and caching can be applied
+on the group instead of each individual disk.
+
+Hard disk(s) can be dynamically added to or removed from the group on demand.
+
+In case of a failure, SSD(s) can be replaced transparently, without interrupting
+upper layers.
 
 
 Requirements
