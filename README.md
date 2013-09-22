@@ -12,7 +12,7 @@ In case of failure(s), SSD(s) can be replaced transparently, without interruptin
 upper layers.
 
 
-principle
+Principle
 =========================
 Figure 1(a) shows the structure of a cached group of HDs, and figure 1(b) adds
 some explanation, which can be described as follow: 
