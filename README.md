@@ -16,15 +16,20 @@ principle
 =========================
 Figure 1(a) shows the structure of a cached group of HDs, and figure 1(b) adds
 some explanation, which can be described as follow: 
-1. Fcg respectively combines the group of HDs and all the SSDs, with dm-linear.
-2. Fcg invokes flashcaceh-create to cache the group of HDS with SSDs.
-3. Fcg splites the hard disks out from the cached group, with dm-linear too.
+
+    1. Fcg respectively combines the group of HDs and all the SSDs, with dm-linear.
+
+    2. Fcg invokes flashcaceh-create to cache the group of HDS with SSDs.
+
+    3. Fcg splites the hard disks out from the cached group, with dm-linear too.
  
 
 ![alt tag](https://raw.github.com/lihuiba/flashcachegroup/master/doc/fcg-structure.png)
+
 figure 1(a)
 
 ![alt tag](https://raw.github.com/lihuiba/flashcachegroup/master/doc/fcg-structure-explained.png)
+
 figure 1(b)
 
 
@@ -41,7 +46,7 @@ to delete an *UNUSED* group:
 
 to replace broken SSDs:
 
-	fcg rep-ssd [-h] [-g GROUP] [-c CACHEDEV [CACHEDEV ...]]
+    fcg rep-ssd [-h] [-g GROUP] [-c CACHEDEV [CACHEDEV ...]]
 
 
 Requirements
