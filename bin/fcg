@@ -6,19 +6,22 @@ def parse_args(cmdline):
 
     subparsers  = parser.add_subparsers(help='sub-command help')
 
-    create_parser = subparsers.add_parser('create', help='fcg-easy create -h')
+    create_parser = subparsers.add_parser('create', help='fcg create -h')
     create_parser.add_argument('-g', '--group', type=str)
     create_parser.add_argument('-d', '--disk', nargs='+', type=str)
     create_parser.add_argument('-c', '--cachedev', nargs='+', type=str)
+    create_parser.add_argument('-b', '--blocksize', type=str, default='4k')
+    create_parser.add_argument('-s', '--size', type=str, default='-1')
+    create_parser.add_argument('-p', '--pattern', type=str, default='through')
     create_parser.add_argument('-y', '--yes', action='store_true', default=False)
     create_parser.set_defaults(func=main_create)
 
-    delete_parser = subparsers.add_parser('delete', help='fcg-easy delete -h')
+    delete_parser = subparsers.add_parser('delete', help='fcg delete -h')
     delete_parser.add_argument('-g', '--group', type=str)
     delete_parser.add_argument('-y', '--yes', action='store_true', default=False)
     delete_parser.set_defaults(func=main_delete)
 
-    rep_ssd_parser = subparsers.add_parser('rep-ssd', help='fcg-easy rep-ssd -h')
+    rep_ssd_parser = subparsers.add_parser('rep-ssd', help='fcg rep-ssd -h')
     rep_ssd_parser.add_argument('-g', '--group', type=str)
     rep_ssd_parser.add_argument('-c', '--cachedev', nargs='+', type=str)
     rep_ssd_parser.set_defaults(func=main_rep_ssd)
@@ -88,8 +91,6 @@ def _write2tempfile(content):
     temp = tempfile.NamedTemporaryFile(delete=False)
     temp.write(content)
     temp.close()
-    #print 'Write table to temporary file %s, content is:' % temp.name
-    #print content
     return temp.name
 
 def _create_table(name, table, isYes):
@@ -127,8 +128,6 @@ def _rename_table(oldName, newName):
 def _reload_table(name, table):
     print 'Reload table %s' % name
     print 'New table content is: \n', table,
-    #if _ask_user() == False:
-    #    raise "User Interrupted"
 
     cmd = 'dmsetup suspend %s'%name
     try:
@@ -150,15 +149,16 @@ def _reload_table(name, table):
         print cmd + ': ',
         print ErrMsg
 
-def _create_flashcache(cacheName, cacheDevice, groupDevice, isYes):
+def _create_flashcache(cacheName, cacheDevice, groupDevice, isYes, blockSize, size, pattern):
     cmd = 'flashcache_destroy -f %s' % cacheDevice
     try:
         _os_execute(cmd)
     except :
         pass
 
-    cacheSize = _sectors2MB(_get_dev_sector_count(cacheDevice))
-    cmd = 'flashcache_create -p through -b 4k -s %s %s %s %s' % (cacheSize, cacheName, cacheDevice, groupDevice)
+    if size == '-1':
+        size = _sectors2MB(_get_dev_sector_count(cacheDevice))
+    cmd = 'flashcache_create -p %s -b %s -s %s %s %s %s' % (pattern, blockSize, size, cacheName, cacheDevice, groupDevice)
     print 'Create flashcache: %s' % cmd
     _execute(cmd, isYes)
 
@@ -169,7 +169,10 @@ def _delete_flashcache(cacheName, cacheDevice, isYes):
         return False
     cmd = 'flashcache_destroy -f %s' % cacheDevice
     print 'Execute command: %s' % cmd
-    _execute(cmd, isYes)
+    try:
+        _execute(cmd, isYes)
+    except:
+        pass
 
 def _get_cache_ssd_dev(cacheName):
         cmd = "dmsetup table %s|grep ssd|grep dev|awk '{print $3}'" % cacheName
@@ -237,9 +240,9 @@ def _get_cached_names(hddDevs):
 def main_create(args):
     if args.group == None or args.disk == None or args.cachedev == None:
         return
-    create_group(args.group, args.disk, args.cachedev, args.yes)
+    create_group(args.group, args.disk, args.cachedev, args.yes, args.blocksize, args.size, args.pattern)
 
-def create_group(groupName, hddDevs, cacheDevs, isYes):
+def create_group(groupName, hddDevs, cacheDevs, isYes, blockSize, size, pattern):
     #create linear device group
     groupTable = ''
     try:
@@ -275,7 +278,7 @@ def create_group(groupName, hddDevs, cacheDevs, isYes):
     cacheDevice = '/dev/mapper/%s' % cacheDevName
     cacheName = 'cachegroup-%s' % groupName
     try:
-        _create_flashcache(cacheName, cacheDevice, groupDevice, isYes)
+        _create_flashcache(cacheName, cacheDevice, groupDevice, isYes, blockSize, size, pattern)
     except Exception, e:
         print e
         print 'Try to roll back...'
