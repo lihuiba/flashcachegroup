@@ -14,6 +14,7 @@ def parse_args(cmdline):
     create_parser.add_argument('-s', '--size', type=str, default='-1')
     create_parser.add_argument('-p', '--pattern', type=str, default='through')
     create_parser.add_argument('-y', '--yes', action='store_true', default=False)
+    create_parser.add_argument('--skip', type=int, default=0)
     create_parser.set_defaults(func=main_create)
 
     delete_parser = subparsers.add_parser('delete', help='fcg delete -h')
@@ -72,7 +73,7 @@ def _get_dev_sector_count(dev):
     return devSector
 
 def _sectors2MB(sectors):
-    return str(sectors*512/1024/1024) + 'M'
+    return sectors*512/1024/1024
 
 def _linear_map_table(devices):
     table = ''
@@ -149,18 +150,52 @@ def _reload_table(name, table):
         print cmd + ': ',
         print ErrMsg
 
-def _create_flashcache(cacheName, cacheDevice, groupDevice, isYes, blockSize, size, pattern):
+def _set_skip_thes_kb(device, skip):
+    cmd = 'sudo sysctl dev.flashcache.%s.skip_seq_thresh_kb=%d' % (device, skip)
+    print cmd
+    try:
+        _os_execute(cmd)
+    except Exception, e:
+        print e
+
+def _create_flashcache(cacheName, cacheDevice, groupDevice, isYes, blockSize, size, pattern, skip):
     cmd = 'flashcache_destroy -f %s' % cacheDevice
     try:
         _os_execute(cmd)
     except :
         pass
 
+    cacheSize = ''
+    totalMB = _sectors2MB(_get_dev_sector_count(cacheDevice))
     if size == '-1':
-        size = _sectors2MB(_get_dev_sector_count(cacheDevice))
-    cmd = 'flashcache_create -p %s -b %s -s %s %s %s %s' % (pattern, blockSize, size, cacheName, cacheDevice, groupDevice)
+        cacheSize = str(totalMB) + 'M'
+    elif size.endswith('%'):
+        percent = 0.0
+        try:
+            percent = float(size[0:-1])
+        except:
+            raise Exception("Wrong format of cache size!")
+        if percent > 0.0 and percent <= 100.0:
+            cacheSize = str(int(percent*totalMB/100)) + 'M'
+        else:
+            raise Exception("Wrong format of cache size!")
+    else:
+        percent = 0.0
+        try:
+            percent = float(size)
+        except:
+            pass
+        if percent > 0.0 and percent <= 1.0:
+            cacheSize = str(int(percent*totalMB)) + 'M'
+        else:
+            raise Exception("Wrong format of cache size!")
+        
+    cmd = 'flashcache_create -p %s -b %s -s %s %s %s %s' % (pattern, blockSize, cacheSize, cacheName, cacheDevice, groupDevice)
     print 'Create flashcache: %s' % cmd
     _execute(cmd, isYes)
+    if skip > 0:
+        procDev = _get_device_name(cacheDevice) + '+' + _get_device_name(groupDevice)
+        _set_skip_thes_kb(procDev, skip)
 
 def _delete_flashcache(cacheName, cacheDevice, isYes):
     print 'Delete flashcache'
@@ -240,9 +275,9 @@ def _get_cached_names(hddDevs):
 def main_create(args):
     if args.group == None or args.disk == None or args.cachedev == None:
         return
-    create_group(args.group, args.disk, args.cachedev, args.yes, args.blocksize, args.size, args.pattern)
+    create_group(args.group, args.disk, args.cachedev, args.yes, args.blocksize, args.size, args.pattern, args.skip)
 
-def create_group(groupName, hddDevs, cacheDevs, isYes, blockSize, size, pattern):
+def create_group(groupName, hddDevs, cacheDevs, isYes, blockSize, size, pattern, skip):
     #create linear device group
     groupTable = ''
     try:
@@ -278,7 +313,7 @@ def create_group(groupName, hddDevs, cacheDevs, isYes, blockSize, size, pattern)
     cacheDevice = '/dev/mapper/%s' % cacheDevName
     cacheName = 'cachegroup-%s' % groupName
     try:
-        _create_flashcache(cacheName, cacheDevice, groupDevice, isYes, blockSize, size, pattern)
+        _create_flashcache(cacheName, cacheDevice, groupDevice, isYes, blockSize, size, pattern, skip)
     except Exception, e:
         print e
         print 'Try to roll back...'
