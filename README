@@ -22,6 +22,7 @@ Python 2.6 and 2.7 (does **NOT** support Python 3.x)
 Modules
 -------
 * flashcache
+* blkdiscard
 
 Install (Linux)
 =====================
@@ -39,7 +40,9 @@ Usage
 
 to create a new group by using hard disks:
 
-    fcg create [-h] [-g GROUP] [-d DISK [DISK ...]] [-c CACHEDEV [CACHEDEV ...]]
+    fcg create [-h] [-g GROUP] [-d DISK [DISK ...]]
+                    [-c CACHEDEV [CACHEDEV ...]] [-b BLOCKSIZE] [-s SIZE]
+                    [-p PATTERN] [-y] [--skip SKIP] [--discard] [--trim]
 
 to delete an *UNUSED* group:
 
@@ -47,4 +50,9 @@ to delete an *UNUSED* group:
 
 to replace broken SSDs:
 
-	fcg rep-ssd [-h] [-g GROUP] [-c CACHEDEV [CACHEDEV ...]]
+    fcg rep-ssd [-h] [-g GROUP] [-c CACHEDEV [CACHEDEV ...]]
+
+Change log
+=====================
+v0.2.10:
+    add -s -b -p --skip --discard --trim arguments when create fcg

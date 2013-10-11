@@ -38,7 +38,9 @@ Usage
 
 to create a new group by using hard disks:
 
-    fcg create [-h] [-g GROUP] [-d DISK [DISK ...]] [-c CACHEDEV [CACHEDEV ...]]
+    fcg create [-h] [-g GROUP] [-d DISK [DISK ...]]
+                    [-c CACHEDEV [CACHEDEV ...]] [-b BLOCKSIZE] [-s SIZE]
+                    [-p PATTERN] [-y] [--skip SKIP] [--discard] [--trim]
 
 to delete an *UNUSED* group:
 
@@ -59,6 +61,7 @@ Python 2.6 and 2.7 (does **NOT** support Python 3.x)
 Modules
 -------
 * flashcache
+* blkdiscard
 
 Installation 
 =====================
@@ -71,3 +74,7 @@ Or manually (assuming all required modules are installed on your system)::
 
     sudo python ./setup.py install
 
+Change log
+=====================
+v0.2.10:
+    add -s -b -p --skip --discard --trim arguments when create fcg
