@@ -6,7 +6,7 @@ AUTHOR_EMAIL="lzynudt@gmail.com"
 URL="https://github.com/lihuiba/flashcachegroup"
 setup(
     name=NAME,
-    version="0.2.4",
+    version="0.2.6",
     description=DESCRIPTION,
     long_description=open("README").read(),
     author=AUTHOR,

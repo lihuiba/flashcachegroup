@@ -15,6 +15,7 @@ def parse_args(cmdline):
     create_parser.add_argument('-p', '--pattern', type=str, default='through')
     create_parser.add_argument('-y', '--yes', action='store_true', default=False)
     create_parser.add_argument('--skip', type=int, default=0)
+    create_parser.add_argument('--discard', action='store_true', default=False)
     create_parser.set_defaults(func=main_create)
 
     delete_parser = subparsers.add_parser('delete', help='fcg delete -h')
@@ -272,13 +273,24 @@ def _get_cached_names(hddDevs):
     cachedNames = [ 'cached-' + _get_device_name(hdd) for hdd in hddDevs]
     return cachedNames
 
+def _discard_ssd(device):
+    cmd = 'blkdiscard %s' % device
+    try:
+        _os_execute(cmd)
+    except Exception, e:
+        raise Exception(e)
+
 def main_create(args):
     if args.group == None or args.disk == None or args.cachedev == None:
         return
-    create_group(args.group, args.disk, args.cachedev, args.yes, args.blocksize, args.size, args.pattern, args.skip)
+    create_group(args.group, args.disk, args.cachedev, args.yes, args.blocksize, args.size, args.pattern, args.skip, args.discard)
 
-def create_group(groupName, hddDevs, cacheDevs, isYes, blockSize, size, pattern, skip):
+def create_group(groupName, hddDevs, cacheDevs, isYes, blockSize, size, pattern, skip, discard):
     #create linear device group
+    if discard:
+        for ssd in cacheDevs:
+            _discard_ssd(ssd)
+
     groupTable = ''
     try:
         groupTable = _linear_map_table(hddDevs)
