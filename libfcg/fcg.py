@@ -11,8 +11,9 @@ class FCG(executor.Executor):
 	def _run(self, *args, **kwargs):
 		self._execute(self._cmd, *args, run_as_root=True, **kwargs)
 
-	def create_group(self):
-		pass
+	def create_group(self, name, hdds, ssds, block_size, pattern):
+		group_table = ''
+		
 
 	def add_disk(self):
 		pass
