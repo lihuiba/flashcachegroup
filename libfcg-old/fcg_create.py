@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import sys, os
-import FcgUtils
-from FcgTable import FcgTable
-from FcgCache import FcgCacheGroup
+from libfcg.FcgTable import FcgTable
+from libfcg.FcgCache import FcgCacheGroup
 
 def __create_group(groupName, cacheDev, hddSize, cacheSize):
     #create group table
