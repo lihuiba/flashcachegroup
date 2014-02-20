@@ -8,4 +8,5 @@ from libfcg.fcg import FCG
 if __name__ == '__main__':
 	fcg = FCG('tfcg')
 	fcg.create_group(['/dev/loop3'], '4k', 'back')
-	fcg.delete_group()
+	#fcg.delete_group()
+	fcg.add_disk('/dev/loop1')

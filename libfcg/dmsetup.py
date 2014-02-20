@@ -6,11 +6,11 @@ from common import processutils as putils
 import utils
 import dmtable
 
-mapdev_prefix = '/dev/mapper/'
 
 class Dmsetup(executor.Executor):
-	def __init__(self, execute=putils.execute):
+	def __init__(self, mapdev_prefix = '/dev/mapper/', execute=putils.execute):
 		super(Dmsetup, self).__init__(root_helper='', execute=execute)
+		self.mapdev_prefix = mapdev_prefix
 
 	def _run_dmsetup(self, dmsetup_command, *args):
 		(out, err) = self._execute('dmsetup', dmsetup_command, *args,
@@ -21,7 +21,7 @@ class Dmsetup(executor.Executor):
 	def create_table(self, name, table):
 		table_file = utils.write2tempfile(table)
 		self._run_dmsetup('create', name, table_file)
-		return mapdev_prefix + name
+		return self.mapdev_prefix + name
 
 	def remove_table(self, name):
 		self._run_dmsetup('remove', name)

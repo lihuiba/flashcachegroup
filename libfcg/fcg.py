@@ -24,7 +24,7 @@ class FCG():
 
 	def _cached_disk_name(self, disk):
 		prefix = 'cached_'
-		if disk.contais('/'):
+		if disk.find('/') >= 0:
 			return prefix + disk.split('/')[-1]
 		else:
 			return prefix + disk
@@ -51,8 +51,52 @@ class FCG():
 		dm.create_table(free_name, free_table)
 	
 
-	def add_disk(self):
-		pass
+	def _get_free_table(self, group_table, cache_Dev):
+		free_table = ''
+		lines = group_table.strip().split('\n')
+		start = 0
+		for line_str in lines:
+			line = line_str.strip().split()
+			line_start, line_offset = map(int, line[0:2])
+			if len(line) == 3 and line[2] == 'error':
+				new_line = '{0} {1} linear {2} {3}\n'.format(start, line_offset, cache_Dev, line_start)
+				free_table += new_line
+				start += line_offset
+		return free_table
+
+	def add_disk(self, disk):
+		dm = Dmsetup()
+		group_table = ''
+		try:
+			group_table = dm.get_table(self.group_name)
+		except Exception, e:
+			raise Exception("Group %s dose NOT exist..." % self.group_name)
+		new_group_table = ''
+		start_sector = 0
+		sector = utils.get_dev_sector_count(disk)
+		lines = group_table.strip().split('\n')
+		for i in range(len(lines)):
+			line_str = lines[i]
+			line = line_str.strip().split()
+			start, offset = map(int, line[0:2])
+			map_type = line[2]
+			if map_type == 'error' and offset >= sector:
+				start_sector = start
+				new_disk_line = '%d %d linear %s 0\n' % (start, sector, disk)
+				new_group_table += new_disk_line
+				if offset > sector:
+					new_err_line = '%d %d error\n' %(start+sector, offset-sector)
+					new_group_table += new_err_line
+			else:
+				new_group_table += line_str
+				new_group_table += '\n'
+		cache_dev = dm.mapdev_prefix + self._cache_name()
+		new_free_table = self._get_free_table(new_group_table, cache_dev)
+		cached_table = '0 %d linear %s %d' % (sector, cache_dev, start_sector)
+
+		dm.reload_table(self.group_name, new_group_table)
+		dm.reload_table(self._free_name(), new_free_table)
+		dm.create_table(self._cached_disk_name(disk), cached_table)
 
 	def rm_disk(self):
 		pass

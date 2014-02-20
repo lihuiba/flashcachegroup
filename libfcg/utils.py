@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import tempfile
 
 from common import processutils as putils
@@ -10,12 +11,16 @@ def execute(cmd, *args, **kwargs):
 	return out
 
 def get_dev_sector_count(dev):
+	if not os.path.exists(dev):
+		raise Exception('Device %s does NOT exist...' % dev)
 	devSector = execute('blockdev', '--getsz', dev)
 	if type(devSector) != int:
 		try:
 			devSector = int(devSector)
 		except:
 			return 0
+	if devSector <= 0:
+		raise Exception('Device %s is EMPTY...' % dev)
 	return devSector
 
 def get_devname_from_major_minor(major_minor):

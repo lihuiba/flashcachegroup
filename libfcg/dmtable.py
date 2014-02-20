@@ -11,11 +11,7 @@ def linear_map_table(disks):
 	table = ''
 	startSector = 0
 	for disk in disks:
-		if not os.path.exists(disk):
-			raise Exception('Device %s does NOT exist...' % disk)
 		sector = utils.get_dev_sector_count(disk)
-		if sector <= 0:
-			raise Exception('Device %s is EMPTY...' % disk)
 		table +=  '%d %d linear %s 0\n' % (startSector, sector, disk)
 		startSector += sector
 	return table
@@ -34,3 +30,24 @@ def get_disks_in_linear_table(table):
 				pass
 			disks.append(disk)
 	return disks
+
+def insert_disk_to_linear_table(disk, table):
+	new_table = ''
+	sector = utils.get_dev_sector_count(disk)
+	lines = table.strip().split('\n')
+	for i in range(len(lines)):
+		line_str = lines[i]
+		line = line_str.strip().split()
+		start, offset = map(int, line[0:2])
+		map_type = line[2]
+		if map_type == 'error' and offset >= sector:
+			new_disk_line = '%d %d linear %s 0\n' % (start, sector, disk)	
+			new_table += new_disk_line
+			if offset > sector:
+				new_err_line = '%d %d error\n' %(start+sector, offset-sector)
+				new_table += new_err_line
+		else:
+			new_table += line_str
+			new_table += '\n'
+	return new_table
+				
