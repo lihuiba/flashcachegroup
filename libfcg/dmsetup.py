@@ -4,6 +4,9 @@ import os
 from common import executor
 from common import processutils as putils
 import utils
+import dmtable
+
+mapdev_prefix = '/dev/mapper/'
 
 class Dmsetup(executor.Executor):
 	def __init__(self, execute=putils.execute):
@@ -15,26 +18,10 @@ class Dmsetup(executor.Executor):
 		out = out.strip()
 		return (out, err)
 
-	def _linear_map_table(self, disks):
-		table = ''
-		startSector = 0
-		for disk in disks:
-			if not os.path.exists(disk):
-				raise Exception('Device %s does NOT exist...' % disk)
-			sector = utils.get_dev_sector_count(disk)
-			if sector <= 0:
-				raise Exception('Device %s is EMPTY...' % disk)
-			table +=  '%d %d linear %s 0\n' % (startSector, sector, disk)
-			startSector += sector
-		return table
-
-	def create_linear_map(self, name, disks):
-		table = self._linear_map_table(disks)
-		self.create_table(name, table)
-
 	def create_table(self, name, table):
 		table_file = utils.write2tempfile(table)
 		self._run_dmsetup('create', name, table_file)
+		return mapdev_prefix + name
 
 	def remove_table(self, name):
 		self._run_dmsetup('remove', name)
