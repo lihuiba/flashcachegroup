@@ -5,6 +5,7 @@ import tempfile
 from common import processutils as putils
 
 def execute(cmd, *args, **kwargs):
+	print args
 	(out, ret) = putils.execute(cmd, *args, **kwargs)
 	out = out.strip()
 	return out

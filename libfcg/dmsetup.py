@@ -13,6 +13,7 @@ class Dmsetup(executor.Executor):
 		super(Dmsetup, self).__init__(root_helper='', execute=execute)
 
 	def _run_dmsetup(self, dmsetup_command, *args):
+		print args
 		(out, err) = self._execute('dmsetup', dmsetup_command, *args,
 									run_as_root=True)
 		out = out.strip()

@@ -20,7 +20,7 @@
    and root_helper settings, so this provides that hook.
 """
 
-from common import processutils as putils
+import processutils as putils
 
 
 class Executor(object):
