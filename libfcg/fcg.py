@@ -71,25 +71,33 @@ class FCG():
 			group_table = dm.get_table(self.group_name)
 		except Exception, e:
 			raise Exception("Group %s dose NOT exist..." % self.group_name)
+		if disk == '/dev/loop2':
+			print group_table
 		new_group_table = ''
 		start_sector = 0
 		sector = utils.get_dev_sector_count(disk)
 		lines = group_table.strip().split('\n')
+		found = False
 		for i in range(len(lines)):
 			line_str = lines[i]
 			line = line_str.strip().split()
 			start, offset = map(int, line[0:2])
 			map_type = line[2]
-			if map_type == 'error' and offset >= sector:
+			if not found and map_type == 'error' and offset >= sector:
 				start_sector = start
 				new_disk_line = '%d %d linear %s 0\n' % (start, sector, disk)
 				new_group_table += new_disk_line
 				if offset > sector:
 					new_err_line = '%d %d error\n' %(start+sector, offset-sector)
 					new_group_table += new_err_line
+				found = True
 			else:
 				new_group_table += line_str
 				new_group_table += '\n'
+
+		if disk == '/dev/loop2':
+			print new_group_table
+
 		cache_dev = dm.mapdev_prefix + self._cache_name()
 		new_free_table = self._get_free_table(new_group_table, cache_dev)
 		cached_table = '0 %d linear %s %d' % (sector, cache_dev, start_sector)
@@ -137,11 +145,23 @@ class FCG():
 		new_group_table = ''
 		for new_group_line_str in new_group_lines:
 			new_group_line = new_group_line_str.strip().split()
-			if len(new_group_line) == 3:
-				#TODO: to be continued
-			pre_type = group_line[2]
-			pre_start = group_line_start
-			pre_offset = group_line_offset
+			line_start, line_offset = [int(x) for x in new_group_line[0:2]]
+			line_type = new_group_line[2]
+			if line_type == 'error':
+				if pre_type == 'error':
+					pre_offset += line_offset
+				else:
+					pre_start, pre_offset, pre_type = [line_start, line_offset, line_type]
+			elif line_type == 'linear':
+				if pre_type == 'error':
+					temp_line = '{0} {1} error\n'.format(pre_start, pre_offset)
+					new_group_table += temp_line
+				new_group_table += new_group_line_str
+				new_group_table += '\n'
+				pre_start, pre_offset, pre_type = [line_start, line_offset, line_type]
+		if pre_type == 'error':
+			temp_line = '{0} {1} error\n'.format(pre_start, pre_offset)
+			new_group_table += temp_line
 
 		cache_dev = dm.mapdev_prefix + self._cache_name()
 		new_free_table = self._get_free_table(new_group_table, cache_dev)
