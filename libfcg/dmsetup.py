@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 import os
-from common import executor
-from common import processutils as putils
-import utils
-import dmtable
+from libfcg.common import executor
+from libfcg.common import processutils as putils
+from libfcg import utils
+from libfcg import dmtable
 
 
 class Dmsetup(executor.Executor):

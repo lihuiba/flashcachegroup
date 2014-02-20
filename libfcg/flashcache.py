@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from common import executor
-from common import processutils as putils
-import utils
+from libfcg.common import executor
+from libfcg.common import processutils as putils
+from libfcg import utils
 
 
 cachedev_prefix = '/dev/mapper/'

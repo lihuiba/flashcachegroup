@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-import utils
+from libfcg import utils
 
 def get_error_table(sectors):
 	table = '0 %d error' % sectors

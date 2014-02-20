@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 
-from common import executor
-from common import processutils as putils
-import dmtable
-import utils
-from  dmsetup import Dmsetup
-from flashcache import Flashcache
+from libfcg.common import executor
+from libfcg.common import processutils as putils
+from libfcg import dmtable
+from libfcg import utils
+from libfcg.dmsetup import Dmsetup
+from libfcg.flashcache import Flashcache
 
 class FCG():
 
@@ -71,8 +71,6 @@ class FCG():
 			group_table = dm.get_table(self.group_name)
 		except Exception, e:
 			raise Exception("Group %s dose NOT exist..." % self.group_name)
-		if disk == '/dev/loop2':
-			print group_table
 		new_group_table = ''
 		start_sector = 0
 		sector = utils.get_dev_sector_count(disk)
@@ -94,9 +92,6 @@ class FCG():
 			else:
 				new_group_table += line_str
 				new_group_table += '\n'
-
-		if disk == '/dev/loop2':
-			print new_group_table
 
 		cache_dev = dm.mapdev_prefix + self._cache_name()
 		new_free_table = self._get_free_table(new_group_table, cache_dev)
