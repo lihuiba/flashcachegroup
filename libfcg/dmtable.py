@@ -20,8 +20,17 @@ def linear_map_table(disks):
 		startSector += sector
 	return table
 
-def insert_disk_to_linear_table(table, disk):
-	pass
-
-def remove_disk_from_linear_table(table, disk):
-	pass
+def get_disks_in_linear_table(table):
+	disks = []
+	table_list = table.split('\n')
+	for table_line_str in table_list:
+		line = table_line_str.split()
+		if len(line) == 5:
+			disk = line[3]
+			try:
+				major, minor = [int(x) for x in disk.split(':')]
+				disk = utils.get_devname_from_major_minor(disk)
+			except Exception, e:
+				pass
+			disks.append(disk)
+	return disks

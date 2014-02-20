@@ -5,7 +5,6 @@ import tempfile
 from common import processutils as putils
 
 def execute(cmd, *args, **kwargs):
-	print args
 	(out, ret) = putils.execute(cmd, *args, **kwargs)
 	out = out.strip()
 	return out
@@ -18,6 +17,9 @@ def get_dev_sector_count(dev):
 		except:
 			return 0
 	return devSector
+
+def get_devname_from_major_minor(major_minor):
+	return '/dev/' + os.readlink('/dev/block/%s' % major_minor)[3:]
 
 def write2tempfile(content):
 	temp = tempfile.NamedTemporaryFile(delete=False)

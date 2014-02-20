@@ -6,5 +6,6 @@ sys.path.append('..')
 from libfcg.fcg import FCG
 
 if __name__ == '__main__':
-	fcg = FCG()
-	fcg.create_group('tfcg', ['/dev/loop3'], '4k', 'back')
+	fcg = FCG('tfcg')
+	fcg.create_group(['/dev/loop3'], '4k', 'back')
+	fcg.delete_group()

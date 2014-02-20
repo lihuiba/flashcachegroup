@@ -26,3 +26,9 @@ class Flashcache(executor.Executor):
 		
 	def destroy(self, ssd_dev):
 		self._run('flashcache_destroy', '-f', ssd_dev)
+
+	def get_ssd_dev(self, cache_table):
+		left = cache_table.find('(') + 1
+		right = cache_table.find(')')
+		ssd_dev = cache_table[left:right]
+		return ssd_dev
