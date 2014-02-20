@@ -98,8 +98,57 @@ class FCG():
 		dm.reload_table(self._free_name(), new_free_table)
 		dm.create_table(self._cached_disk_name(disk), cached_table)
 
-	def rm_disk(self):
-		pass
+	def rm_disk(self, disk):
+		dm = Dmsetup()
+		group_table = ''
+		try:
+			group_table = dm.get_table(self.group_name)
+		except Exception, e:
+			raise Exception("Group %s dose NOT exist..." % self.group_name)
+		cached_name = self._cached_disk_name(disk)
+		cached_table = dm.get_table(cached_name)
+		cached_line = cached_table.strip().split()
+		start, offset, cachedev_offset = map(int, [cached_line[0], cached_line[1], cached_line[4]])
+
+		new_group_lines = []
+		group_lines = group_table.split('\n')
+		for group_line_str in group_lines:
+			group_line = group_line_str.strip().split()
+			group_line_start, group_line_offset = map(int, group_line[0:2])
+			if len(group_line) == 5 and group_line_offset == offset:
+					mapped_disk = group_line[3]
+					try:
+						major, minor = [int(x) for x in mapped_disk.split(':')]
+						mapped_disk = utils.get_devname_from_major_minor(mapped_disk)
+					except:
+						pass
+					if mapped_disk == disk:
+						new_error_line = '{0} {1} error'.format(group_line_start, group_line_offset)
+						new_group_lines.append(new_error_line)
+					else:
+						new_group_lines.append(group_line_str)
+			else:
+				new_group_lines.append(group_line_str)
+
+		#adjust lines
+		pre_type = ''
+		pre_start = 0
+		pre_offset = 0
+		new_group_table = ''
+		for new_group_line_str in new_group_lines:
+			new_group_line = new_group_line_str.strip().split()
+			if len(new_group_line) == 3:
+				#TODO: to be continued
+			pre_type = group_line[2]
+			pre_start = group_line_start
+			pre_offset = group_line_offset
+
+		cache_dev = dm.mapdev_prefix + self._cache_name()
+		new_free_table = self._get_free_table(new_group_table, cache_dev)
+
+		dm.remove_table(cached_name)
+		dm.reload_table(self.group_name, new_group_table)
+		dm.reload_table(self._free_name(), new_free_table)
 
 	def delete_group(self):
 		dm = Dmsetup()

@@ -10,3 +10,4 @@ if __name__ == '__main__':
 	fcg.create_group(['/dev/loop3'], '4k', 'back')
 	#fcg.delete_group()
 	fcg.add_disk('/dev/loop1')
+	fcg.rm_disk('/dev/loop1')
