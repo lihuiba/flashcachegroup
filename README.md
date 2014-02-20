@@ -32,23 +32,34 @@ figure 1(a)
 
 figure 1(b)
 
+Usage(fcg)
+=====================
 
-Usage
+fcg create [-h] [-g GROUP] [-c CACHEDEV [CACHEDEV ...]] [-b BLOCKSIZE]
+                [-p PATTERN]
+
+fcg delete [-h] [-g GROUP]
+
+fcg add [-h] [-g GROUP] [-d DISK]
+
+fcg remove [-h] [-g GROUP] [-d DISK]
+
+Usage(fcg-easy)
 =====================
 
 to create a new group by using hard disks:
 
-    fcg create [-h] [-g GROUP] [-d DISK [DISK ...]]
+    fcg-easy create [-h] [-g GROUP] [-d DISK [DISK ...]]
                     [-c CACHEDEV [CACHEDEV ...]] [-b BLOCKSIZE] [-s SIZE]
                     [-p PATTERN] [-y] [--skip SKIP] [--discard] [--trim]
 
 to delete an *UNUSED* group:
 
-    fcg delete [-h] [-g GROUP]
+    fcg-easy delete [-h] [-g GROUP] [-y]
 
 to replace broken SSDs:
 
-    fcg rep-ssd [-h] [-g GROUP] [-c CACHEDEV [CACHEDEV ...]]
+    fcg-easy rep-ssd [-h] [-g GROUP] [-c CACHEDEV [CACHEDEV ...]]
 
 
 Requirements
