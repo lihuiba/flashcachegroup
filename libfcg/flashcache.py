@@ -39,9 +39,9 @@ class Flashcache(executor.Executor):
 		return content
 
 	def get_ssd_dev(self, cache_table):
-		ssd_dev = self._get_item('ssd dev')
+		ssd_dev = self._get_item(cache_table, 'ssd dev')
 		return ssd_dev
 
 	def get_block_size(self, cache_table):
-		block_size = self._get_item('data block size')
+		block_size = self._get_item(cache_table, 'data block size')
 		return block_size
