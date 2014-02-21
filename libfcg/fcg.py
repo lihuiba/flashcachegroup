@@ -135,6 +135,13 @@ class FCG():
 			temp_line = '{0} {1} error\n'.format(pre_start, pre_offset)
 			new_group_table += temp_line
 
+		cache_name = self._cache_name()
+		cache_dev = dm.mapdev_prefix + cache_name
+		cache_table = dm.get_table(cache_name)
+		fc = Flashcache()
+		block_size = fc.get_block_size(cache_table)
+		start_blk, offset_blk = utils.sector_offset2block_offset(cachedev_offset, offset, block_size)
+		fc.invalid(cache_dev, start_blk, offset_blk)
 		dm.remove_table(cached_name)
 		dm.reload_table(self.group_name, new_group_table)
 

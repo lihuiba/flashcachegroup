@@ -19,9 +19,7 @@ if __name__ == '__main__':
 	ssd = '/dev/loop3'
 	fcg = FCG('tfcg')
 	run_time(fcg.create_group, [ssd], '4k', 'back')
-	#fcg.delete_group()
 	run_time(fcg.add_disk, hdd1)
-	#fcg.rm_disk(hdd1)
 	run_time(fcg.add_disk, hdd2)
 	run_time(fcg.add_disk, hdd3)
 	run_time(fcg.rm_disk, hdd1)

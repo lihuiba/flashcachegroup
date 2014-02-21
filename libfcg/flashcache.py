@@ -27,8 +27,21 @@ class Flashcache(executor.Executor):
 	def destroy(self, ssd_dev):
 		self._run('flashcache_destroy', '-f', ssd_dev)
 
+	def invalid(self, cache_dev, start, offset):
+		self._run('flashcache_invalidate', cache_dev, start, offset)
+
+	def _get_item(self, cache_table, item):
+		location = cache_table.find(item)
+		part_table = cache_table[location:]
+		left = part_table.find('(') + 1
+		right = part_table.find(')')
+		content = part_table[left:right]
+		return content
+
 	def get_ssd_dev(self, cache_table):
-		left = cache_table.find('(') + 1
-		right = cache_table.find(')')
-		ssd_dev = cache_table[left:right]
+		ssd_dev = self._get_item('ssd dev')
 		return ssd_dev
+
+	def get_block_size(self, cache_table):
+		block_size = self._get_item('data block size')
+		return block_size
