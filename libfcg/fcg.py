@@ -19,9 +19,6 @@ class FCG():
 	def _cache_name(self):
 		return 'cache_' + self.group_name
 
-	def _free_name(self):
-		return 'free_' + self.group_name
-
 	def _cached_disk_name(self, disk):
 		prefix = 'cached_'
 		if disk.find('/') >= 0:
@@ -45,24 +42,6 @@ class FCG():
 		fc = Flashcache()
 		cache_name = self._cache_name()
 		cache_Dev = fc.create(cache_name, ssd_dev, group_dev, block_size, pattern)
-
-		free_name = self._free_name()
-		free_table = dmtable.linear_map_table([cache_Dev])
-		dm.create_table(free_name, free_table)
-	
-
-	def _get_free_table(self, group_table, cache_Dev):
-		free_table = ''
-		lines = group_table.strip().split('\n')
-		start = 0
-		for line_str in lines:
-			line = line_str.strip().split()
-			line_start, line_offset = map(int, line[0:2])
-			if len(line) == 3 and line[2] == 'error':
-				new_line = '{0} {1} linear {2} {3}\n'.format(start, line_offset, cache_Dev, line_start)
-				free_table += new_line
-				start += line_offset
-		return free_table
 
 	def add_disk(self, disk):
 		dm = Dmsetup()
@@ -94,11 +73,9 @@ class FCG():
 				new_group_table += '\n'
 
 		cache_dev = dm.mapdev_prefix + self._cache_name()
-		new_free_table = self._get_free_table(new_group_table, cache_dev)
 		cached_table = '0 %d linear %s %d' % (sector, cache_dev, start_sector)
 
 		dm.reload_table(self.group_name, new_group_table)
-		dm.reload_table(self._free_name(), new_free_table)
 		dm.create_table(self._cached_disk_name(disk), cached_table)
 
 	def rm_disk(self, disk):
@@ -158,12 +135,8 @@ class FCG():
 			temp_line = '{0} {1} error\n'.format(pre_start, pre_offset)
 			new_group_table += temp_line
 
-		cache_dev = dm.mapdev_prefix + self._cache_name()
-		new_free_table = self._get_free_table(new_group_table, cache_dev)
-
 		dm.remove_table(cached_name)
 		dm.reload_table(self.group_name, new_group_table)
-		dm.reload_table(self._free_name(), new_free_table)
 
 	def delete_group(self):
 		dm = Dmsetup()
@@ -177,8 +150,6 @@ class FCG():
 		for disk in disks:
 			cached_name = self._cached_disk_name(disk)
 			dm.remove_table(cached_name)
-
-		dm.remove_table(self._free_name())
 
 		fc = Flashcache()
 		cache_name = self._cache_name()
