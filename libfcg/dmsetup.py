@@ -18,6 +18,14 @@ class Dmsetup(executor.Executor):
         out = out.strip()
         return (out, err)
 
+    def is_exist(self, name):
+        try:
+            self.get_table(name)
+        except:
+            return False
+        else:
+            return True
+
     def create_table(self, name, table):
         table_file = utils.write2tempfile(table)
         self._run_dmsetup('create', name, table_file)
