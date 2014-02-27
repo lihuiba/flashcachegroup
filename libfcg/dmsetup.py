@@ -48,18 +48,30 @@ class Dmsetup(executor.Executor):
         (out, ret) = self._run_dmsetup('table', name)
         return out
 
-    def snapshot(self, origin_name, origin_dev, snapshot_name, snapshot_dev):
+    def origin(self, origin_name, origin_dev):
         origin_size = utils.get_dev_sector_count(origin_dev)
         origin_table = '0 %d snapshot-origin %s' % (origin_size, origin_dev)
-        snapshot_size = utils.get_dev_sector_count(snapshot_dev)
-        snapshot_table = '0 %d snapshot %s %s N 128' % (origin_size, self.mapdev_prefix+origin_name, snapshot_dev)
-
         self.create_table(origin_name, origin_table)
+        origin_path = self.mapdev_prefix + origin_name
+        return origin_path
+        
+    def snapshot(self, origin_path, snapshot_name, snapshot_dev):
+        origin_size = utils.get_dev_sector_count(origin_path)
+        snapshot_size = utils.get_dev_sector_count(snapshot_dev)
+        snapshot_table = '0 %d snapshot %s %s N 128' % (origin_size, origin_path, snapshot_dev)
         self.create_table(snapshot_name, snapshot_table)
+        snapshot_path = self.mapdev_prefix + snapshot_name
+        return snapshot_path
 
-    def multipath(self, disks):
-        #:TODO
-        pass
+    def multipath(self, name, disks):
+        multipath_table = ''
+        size = utils.get_dev_sector_count(disks[0])
+        multipath_table += '0 %d multipath 0 0 1 1 queue-length 0 2 1 ' % size
+        for disk in disks:
+            multipath_table += disk + ' 128 '
+        multipath_table += '\n'
+        self.create_table(name, multipath_table)
+        return self.mapdev_prefix + name
 
         
 
