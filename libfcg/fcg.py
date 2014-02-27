@@ -74,9 +74,11 @@ class FCG():
 
 		cache_dev = dm.mapdev_prefix + self._cache_name()
 		cached_table = '0 %d linear %s %d' % (sector, cache_dev, start_sector)
+        cached_disk_name = self._cached_disk_name(disk)
 
 		dm.reload_table(self.group_name, new_group_table)
-		dm.create_table(self._cached_disk_name(disk), cached_table)
+		dm.create_table(cached_disk_name, cached_table)
+        return dm.mapdev_prefix + cached_disk_name
 
 	def rm_disk(self, disk):
 		dm = Dmsetup()
