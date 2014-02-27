@@ -37,7 +37,7 @@ def main_create(args):
 
 def main_delete(args):
 	fcg = FCG(args.group)
-	fcg.delete.delete_group()
+	fcg.delete_group()
 
 def main_add(args):
 	fcg = FCG(args.group)
