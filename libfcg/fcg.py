@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 
 from libfcg.common import executor
 from libfcg.common import processutils as putils
@@ -44,6 +45,8 @@ class FCG():
         cache_Dev = fc.create(cache_name, ssd_dev, group_dev, block_size, pattern)
 
     def add_disk(self, disk):
+        if os.path.islink(disk):
+            disk = os.path.realpath(disk)
         dm = Dmsetup()
         group_table = ''
         try:
@@ -81,6 +84,8 @@ class FCG():
         return dm.mapdev_prefix + cached_disk_name
 
     def rm_disk(self, disk):
+        if os.path.islink(disk):
+            disk = os.path.realpath(disk)
         dm = Dmsetup()
         group_table = ''
         try:
