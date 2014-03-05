@@ -2,11 +2,11 @@
 
 import os
 
+from pydm.dmsetup import Dmsetup
 from libfcg.common import executor
 from libfcg.common import processutils as putils
 from libfcg import dmtable
 from libfcg import utils
-from libfcg.dmsetup import Dmsetup
 from libfcg.flashcache import Flashcache
 
 class FCG():
