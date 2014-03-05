@@ -73,6 +73,7 @@ Modules
 -------
 * flashcache
 * blkdiscard
+* pydm
 
 Installation 
 =====================
@@ -87,5 +88,7 @@ Or manually (assuming all required modules are installed on your system)::
 
 Change log
 =====================
+v0.3.0:
+    rewrite fcg and separate dmsetup to pydm
 v0.2.10:
     add -s -b -p --skip --discard --trim arguments when create fcg
