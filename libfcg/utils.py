@@ -23,15 +23,6 @@ def get_dev_sector_count(dev):
 		raise Exception('Device %s is EMPTY...' % dev)
 	return devSector
 
-def get_devname_from_major_minor(major_minor):
-	return '/dev/' + os.readlink('/dev/block/%s' % major_minor)[3:]
-
-def write2tempfile(content):
-	temp = tempfile.NamedTemporaryFile(delete=False)
-	temp.write(content)
-	temp.close()
-	return temp.name
-
 def bytes_str2bytes_count(bytes):
 	#take M as default
 	bytes_num = 0
@@ -62,6 +53,3 @@ def sector_offset2block_offset(startSector, offset, blkSize):
 
 def sectors2MB(sectors):
 	return str(sectors*512/1024/1024) + 'M'
-
-if __name__ == '__main__':
-	print get_dev_sector_count('/dev/sda5')
