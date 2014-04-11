@@ -43,6 +43,7 @@ class FCG():
         fc = Flashcache()
         cache_name = self._cache_name()
         cache_Dev = fc.create(cache_name, ssd_group.path, hdd_group.path, block_size, pattern)
+        return cache_Dev
 
     def add_disk(self, disk_path):
         if os.path.islink(disk_path):
