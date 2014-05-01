@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from pydm.blockdev import Blockdev
+
 from libfcg.common import executor
 from libfcg.common import processutils as putils
 from libfcg import utils
@@ -20,7 +22,9 @@ class Flashcache(executor.Executor):
         except Exception, e:
             pass
 
-        cache_size = utils.sectors2MB(utils.get_dev_sector_count(ssd_dev))
+        block = Blockdev(root_helper=self._root_helper)
+
+        cache_size = utils.sectors2MB(block.get_sector_count(ssd_dev))
         self._run('flashcache_create', '-p', pattern, '-b', block_size, '-s', cache_size, cache_name, ssd_dev, group_dev)
         return cachedev_prefix + cache_name
         
