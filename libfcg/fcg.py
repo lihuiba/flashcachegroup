@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
 import os
+import time
 
 from pydm.dmsetup import Dmsetup
-from pydm.dmtable import LinearTable
 from pydm.disk import Disk
+
 from libfcg import utils
 from libfcg.flashcache import Flashcache
+from libfcg.table import FcgLinearTable
 
 
 class FCG():
@@ -21,7 +23,8 @@ class FCG():
     def _cache_name(self):
         return 'cache_' + self.group_name
 
-    def _cached_disk_name(self, disk):
+    @staticmethod
+    def _cached_disk_name(disk):
         prefix = 'cached_'
         if disk.find('/') >= 0:
             return prefix + disk.split('/')[-1]
@@ -34,10 +37,10 @@ class FCG():
         hdd_size = '1P'
         hdd_sectors = utils.bytes2sectors(hdd_size)
         hdd = Disk.from_error(hdd_sectors, root_helper=self.root_helper)
-        hdd_group = LinearTable.from_disks(group_name, [hdd], root_helper=self.root_helper)
+        hdd_group = FcgLinearTable.from_disks(group_name, [hdd], root_helper=self.root_helper)
 
         ssd_name = self._ssd_name()
-        ssd_group = LinearTable.from_disks(ssd_name, ssds,  root_helper=self.root_helper)
+        ssd_group = FcgLinearTable.from_disks(ssd_name, ssds,  root_helper=self.root_helper)
 
         fc = Flashcache(root_helper=self.root_helper)
         cache_name = self._cache_name()
@@ -48,7 +51,7 @@ class FCG():
         if os.path.islink(disk_path):
             disk_path = os.path.realpath(disk_path)
         disk = Disk.from_path(disk_path, root_helper=self.root_helper)
-        hdd_group = LinearTable(self.group_name, root_helper=self.root_helper)
+        hdd_group = FcgLinearTable(self.group_name, root_helper=self.root_helper)
         assert hdd_group.existed, "Group %s dose NOT exist..." % self.group_name
 
         hdd_group.insert_disk(disk)
@@ -63,26 +66,16 @@ class FCG():
     def rm_disk(self, disk_path):
         if os.path.islink(disk_path):
             disk_path = os.path.realpath(disk_path)
-        hdd_group = LinearTable(self.group_name, root_helper=self.root_helper)
+        hdd_group = FcgLinearTable(self.group_name, root_helper=self.root_helper)
         assert hdd_group.existed, "Group %s dose NOT exist..." % self.group_name
         disk = hdd_group.find_disk(disk_path)
-
         dm = Dmsetup(root_helper=self.root_helper)
         cached_name = self._cached_disk_name(disk.dev)
-
-        cache_name = self._cache_name()
-        cache_dev = dm.mapdev_prefix + cache_name
-        cache_table = dm.get_table(cache_name)
-        fc = Flashcache(root_helper=self.root_helper)
-        block_size = fc.get_block_size(cache_table)
-        start_blk, offset_blk = utils.sector_offset2block_offset(disk.start, disk.size, block_size)
-        fc.invalid(cache_dev, start_blk, offset_blk)
-
         dm.remove_table(cached_name)
         hdd_group.remove_disk(disk)
 
     def delete_group(self):
-        hdd_group = LinearTable(self.group_name, root_helper=self.root_helper)
+        hdd_group = FcgLinearTable(self.group_name, root_helper=self.root_helper)
         assert hdd_group.existed, "Group %s dose NOT exist..." % self.group_name
         dm = Dmsetup(root_helper=self.root_helper)
         #TODO: check for wether busy
@@ -97,6 +90,8 @@ class FCG():
         ssd_dev = fc.get_ssd_dev(cache_table)
         dm.remove_table(cache_name)
         fc.destroy(ssd_dev)
+
+        time.sleep(0.1)
 
         dm.remove_table(self._ssd_name())
         dm.remove_table(self.group_name)
