@@ -31,6 +31,9 @@ class FCG():
         else:
             return prefix + disk
 
+    def check_validity(self):
+        return NotImplementedError()
+
     def create_group(self, ssds, block_size, pattern):
         #TODO: roll back if failed
         group_name = self.group_name
