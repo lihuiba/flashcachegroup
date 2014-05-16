@@ -17,9 +17,11 @@ class FCG():
         self.group_name = group_name
         self.root_helper = root_helper
 
+    @property
     def _ssd_name(self):
         return 'ssd_' + self.group_name
 
+    @property
     def _cache_name(self):
         return 'cache_' + self.group_name
 
@@ -31,8 +33,16 @@ class FCG():
         else:
             return prefix + disk
 
-    def check_validity(self):
-        return NotImplementedError()
+    def is_valid(self):
+        dm = Dmsetup(root_helper=self.root_helper)
+        existences = map(dm.is_exist, [self.group_name, self._ssd_name, self._cache_name])
+        if reduce(lambda x, y: x and y, existences):
+            return True
+        else:
+            if reduce(lambda x, y: x or y, existences):
+                raise Exception("Cache group has been broken!")
+            else:
+                return False
 
     def create_group(self, ssds, block_size, pattern):
         #TODO: roll back if failed
@@ -42,11 +52,11 @@ class FCG():
         hdd = Disk.from_error(hdd_sectors, root_helper=self.root_helper)
         hdd_group = FcgLinearTable.from_disks(group_name, [hdd], root_helper=self.root_helper)
 
-        ssd_name = self._ssd_name()
+        ssd_name = self._ssd_name
         ssd_group = FcgLinearTable.from_disks(ssd_name, ssds,  root_helper=self.root_helper)
 
         fc = Flashcache(root_helper=self.root_helper)
-        cache_name = self._cache_name()
+        cache_name = self._cache_name
         cache_dev = fc.create(cache_name, ssd_group.path, hdd_group.path, block_size, pattern)
         return cache_dev
 
@@ -59,7 +69,7 @@ class FCG():
 
         hdd_group.insert_disk(disk)
         dm = Dmsetup(root_helper=self.root_helper)
-        cache_dev = dm.mapdev_prefix + self._cache_name()
+        cache_dev = dm.mapdev_prefix + self._cache_name
         cached_table = '0 %d linear %s %d' % (disk.size, cache_dev, disk.start)
         cached_disk_name = self._cached_disk_name(disk.dev)
 
@@ -88,7 +98,7 @@ class FCG():
                 dm.remove_table(cached_name)
 
         fc = Flashcache(root_helper=self.root_helper)
-        cache_name = self._cache_name()
+        cache_name = self._cache_name
         cache_table = dm.get_table(cache_name)
         ssd_dev = fc.get_ssd_dev(cache_table)
         dm.remove_table(cache_name)
@@ -96,5 +106,5 @@ class FCG():
 
         time.sleep(0.1)
 
-        dm.remove_table(self._ssd_name())
+        dm.remove_table(self._ssd_name)
         dm.remove_table(self.group_name)
