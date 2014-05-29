@@ -44,6 +44,19 @@ class FCG():
             else:
                 return False
 
+    def _exists(self, fcg_table, disk):
+        dm = Dmsetup(root_helper=self.root_helper)
+        cached_disk_name = self._cached_disk_name(disk.dev)
+        return fcg_table.exists(disk) and dm.is_exist(cached_disk_name)
+
+    def exists(self, disk_path):
+        if os.path.islink(disk_path):
+            disk_path = os.path.realpath(disk_path)
+        disk = Disk.from_path(disk_path, root_helper=self.root_helper)
+        hdd_group = FcgLinearTable(self.group_name, root_helper=self.root_helper)
+        assert hdd_group.existed, "Group %s dose NOT exist..." % self.group_name
+        return _exists(hdd_group, disk)
+
     def create_group(self, ssds, block_size, pattern):
         #TODO: roll back if failed
         group_name = self.group_name
@@ -66,14 +79,14 @@ class FCG():
         disk = Disk.from_path(disk_path, root_helper=self.root_helper)
         hdd_group = FcgLinearTable(self.group_name, root_helper=self.root_helper)
         assert hdd_group.existed, "Group %s dose NOT exist..." % self.group_name
-
-        hdd_group.insert_disk(disk)
+        if not hdd_group.exists(disk):
+            hdd_group.insert_disk(disk)
         dm = Dmsetup(root_helper=self.root_helper)
-        cache_dev = dm.mapdev_prefix + self._cache_name
-        cached_table = '0 %d linear %s %d' % (disk.size, cache_dev, disk.start)
         cached_disk_name = self._cached_disk_name(disk.dev)
-
-        dm.create_table(cached_disk_name, cached_table)
+        if not dm.is_exist(cached_disk_name):
+            cache_dev = dm.mapdev_prefix + self._cache_name
+            cached_table = '0 %d linear %s %d' % (disk.size, cache_dev, disk.start)
+            dm.create_table(cached_disk_name, cached_table)
         return dm.mapdev_prefix + cached_disk_name
 
     def rm_disk(self, disk_path):

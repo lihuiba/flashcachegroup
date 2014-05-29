@@ -8,6 +8,13 @@ class FcgLinearTable(LinearTable):
 
     #TODO: initial here, Disk.from_error blabla....
 
+    def exists(self, disk):
+        for a_disk in self.disks[0:-1]:
+            #print "in fcg.table disk.major_minor = %s, a_disk.major_minor = %s " % (disk.major_minor, a_disk.major_minor)
+            if disk.major_minor == a_disk.major_minor:
+                return True
+        return False
+
     def insert_disk(self, new_disk):
         empty_disk = self.disks[-1]
         assert empty_disk.size > new_disk.size, 'NO sufficient space left'
