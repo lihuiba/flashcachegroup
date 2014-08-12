@@ -72,7 +72,6 @@ Python 2.6 and 2.7 (does **NOT** support Python 3.x)
 Modules
 -------
 * flashcache
-* blkdiscard
 * pydm
 
 Installation 
@@ -88,7 +87,14 @@ Or manually (assuming all required modules are installed on your system)::
 
 Change log
 =====================
+v0.6.6:
+> 1. roll back if failed when create fcg.
+> 2. simplify code.
+
+
 v0.3.0:
-    rewrite fcg and separate dmsetup to pydm
+>    rewrite fcg and separate dmsetup to pydm
+
+
 v0.2.10:
-    add -s -b -p --skip --discard --trim arguments when create fcg
+>    add -s -b -p --skip --discard --trim arguments when create fcg
