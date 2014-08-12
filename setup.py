@@ -1,12 +1,13 @@
 from setuptools import setup, find_packages
-NAME="flashcachegroup"
-DESCRIPTION="create cache for a group of disks"
-AUTHOR="Ziyang Li"
-AUTHOR_EMAIL="lzynudt@gmail.com"
-URL="https://github.com/lihuiba/flashcachegroup"
+
+NAME = "flashcachegroup"
+DESCRIPTION = "create cache for a group of disks"
+AUTHOR = "Ziyang Li"
+AUTHOR_EMAIL = "anzigly@gmail.com"
+URL = "https://github.com/lihuiba/flashcachegroup"
 setup(
     name=NAME,
-    version="0.6.3",
+    version="0.6.4",
     description=DESCRIPTION,
     long_description=open("README.md").read(),
     author=AUTHOR,
@@ -14,6 +15,6 @@ setup(
     license="GPL",
     url=URL,
     packages=find_packages(),
-    scripts = ["bin/fcg", "bin/fcg-easy"],
+    scripts=["bin/fcg", "bin/fcg-easy"],
     keywords='flashcache group'
 )

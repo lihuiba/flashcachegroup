@@ -2,15 +2,18 @@
 
 import time
 import sys
+
 sys.path.append('..')
 
 from libfcg.fcg import FCG
+
 
 def run_time(func, *args, **kwargs):
     t0 = time.time()
     func(*args, **kwargs)
     t1 = time.time()
-    print '%d s, %s'%(t1-t0, func)
+    print '%d s, %s' % (t1 - t0, func)
+
 
 if __name__ == '__main__':
     hdd1 = '/dev/loop0'
