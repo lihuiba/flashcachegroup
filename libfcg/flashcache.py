@@ -34,7 +34,8 @@ class Flashcache(executor.Executor):
     def invalid(self, cache_dev, start, offset):
         self._run('flashcache_invalidate', cache_dev, start, offset)
 
-    def _get_item(self, cache_table, item):
+    @staticmethod
+    def _get_item(cache_table, item):
         location = cache_table.find(item)
         part_table = cache_table[location:]
         left = part_table.find('(') + 1

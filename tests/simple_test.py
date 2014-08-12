@@ -20,7 +20,7 @@ if __name__ == '__main__':
     hdd2 = '/dev/loop1'
     hdd3 = '/dev/loop2'
     ssd = '/dev/loop3'
-    fcg = FCG('tfcg')
+    fcg = FCG('tfcg', 'sudo')
     run_time(fcg.create_group, [ssd], '4k', 'back')
     run_time(fcg.add_disk, hdd1)
     run_time(fcg.add_disk, hdd1)
