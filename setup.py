@@ -7,9 +7,8 @@ AUTHOR_EMAIL = "anzigly@gmail.com"
 URL = "https://github.com/lihuiba/flashcachegroup"
 setup(
     name=NAME,
-    version="0.6.6",
+    version="0.6.7",
     description=DESCRIPTION,
-    long_description=open("README.md").read(),
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     license="GPL",
